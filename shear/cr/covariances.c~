@@ -86,6 +86,34 @@ void make_cov_power_single_2D(char *OUT_FILE,double *ell,double *dell,int Ncl)
 }
 
 
+void make_cov_power_tomo(char *OUT_FILE, char *PARA_FILE,double *ell,double *dell,int Ncl)
+{
+  
+}
+
+
+void make_cov_tpcf_no_tomo(char *OUT_FILE, char *PARA_FILE,double *vt,double *dvt,int Ntpcf)
+{
+  
+}
+
+void make_cov_tpcf_tomo(char *OUT_FILE, char *PARA_FILE,double *vt,double *dvt,int Ntpcf)
+{
+  
+}
+
+
+void make_cov_cosebis_no_tomo(char *OUT_FILE, char *PARA_FILE,double vtmax,double vtmin,int Ncosebis)
+{
+  
+}
+
+void make_cov_cosebis_tomo(char *OUT_FILE, char *PARA_FILE,double vtmax,double vtmin,int Ncosebis)
+{
+  
+}
+
+
 void set_cosmology(int set_cosmo)
 {
   if(set_cosmo==1){
@@ -122,16 +150,11 @@ void set_redshift_distri(int set_redshift)
   }
 }
 
-void write_parameters(int SINGLE, int COVARIANCES, char *PARA_FILE, char *OUT_FILE,int N_para,int START,int END,int Ncl, double lmax, double lmin, int set_redshift)
+void write_parameters(char *PARA_FILE, char *OUT_FILE,int N_para,int START,int END,int Ncl,int Ntpcf,int Ncosebis, double lmax, double lmin, double vtmax, double vtmin, int set_redshift)
 {
   printf("---------------------------------------\n");
   printf("---------RUN MODE PARAMETERS-----------\n");
   printf("\n");
-  if (SINGLE==1)printf("Single cosmology mode\n");
-  if (SINGLE==0)printf("List cosmology mode\n");
-  if (COVARIANCES==0)printf("Prediction mode\n");
-  if (COVARIANCES==1)printf("Covariance mode\n");
-  
   printf("PARA_FILE: %s\n",PARA_FILE);
   printf("OUT_FILE: %s\n",OUT_FILE);
   printf("TOTAL # cosmologies: %d\n",N_para);
@@ -143,6 +166,8 @@ void write_parameters(int SINGLE, int COVARIANCES, char *PARA_FILE, char *OUT_FI
   printf("\n");
   printf("lmax: %le\n",lmax);
   printf("lmin: %le\n",lmin);
+  printf("vtmax: %le\n",vtmax);
+  printf("vtmin: %le\n",vtmin);
   
   printf("---------------------------------------\n");
   printf("---------REDSHIFT PARAMETERS-----------\n");
@@ -229,7 +254,7 @@ int main(int argc, char** argv)
       sheartomo.zmax[i]=atof(argv[27+i]);
     }
   }
-  write_parameters(SINGLE,COVARIANCES,PARA_FILE,OUT_FILE,N_para,START,END,Ncl,lmax,lmin,set_redshift);
+  write_parameters(PARA_FILE,OUT_FILE,N_para,START,END,Ncl,Ntpcf,Ncosebis,lmax,lmin,vtmin,vtmax,set_redshift);
   
   //binning  calculation
   double logdl=(log(lmax)-log(lmin))/Ncl;
