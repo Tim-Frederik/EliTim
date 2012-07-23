@@ -1149,7 +1149,7 @@ double int_for_zdistr_mock_photoz(double ztrue, void *params)
 	array[2] = ztrue;
     gsl_integration_workspace *w;
     gsl_function H;
-
+	
     w = gsl_integration_workspace_alloc (1000);
 	
     H.function = &int_for_zdistr_mock_photoz_inner;
@@ -1168,21 +1168,9 @@ double zdistr_photoz(double z,int i) //returns p(ztrue | i), works with binned o
 	static double Z0     = -42.;
 	static double ZMIN   = -42.;
 	static double ZMAX   = -42.;
-	double x, f,array[3];
-	switch (i) {
-		case 0:array[0] = redshiftshear.zdistrpar_zmin1;array[1] = redshiftshear.zdistrpar_zmax1;
-			break;
-		case 1:array[0] = redshiftshear.zdistrpar_zmin2;array[1] = redshiftshear.zdistrpar_zmax2;
-			break;
-		case 2:array[0] = redshiftshear.zdistrpar_zmin3;array[1] = redshiftshear.zdistrpar_zmax3;
-			break;
-		case 3:array[0] = redshiftshear.zdistrpar_zmin4;array[1] = redshiftshear.zdistrpar_zmax4;
-			break;
-		case 4:array[0] = redshiftshear.zdistrpar_zmin5;array[1] = redshiftshear.zdistrpar_zmax5;
-			break;
-		default:array[0] = redshiftshear.zdistrpar_zmin; array[1] = redshiftshear.zdistrpar_zmax;
-			break;
-	}
+	double x, f,array[3],error;
+	if (i < 0){array[0] = redshiftshear.zdistrpar_zmin; array[1] = redshiftshear.zdistrpar_zmax;}
+	if (i>= 0 && i < sheartomo.Nbin){array[0] =sheartomo.zmin[i];array[1] = sheartomo.zmax[i];}
 	//First, compute the normalization
 	if (ALPHA != redshiftshear.alpha || BETA_P != redshiftshear.beta_p || Z0 != redshiftshear.z0 || ZMIN !=redshiftshear.zdistrpar_zmin || ZMAX !=redshiftshear.zdistrpar_zmax)
 	{
@@ -1200,7 +1188,7 @@ double zdistr_photoz(double z,int i) //returns p(ztrue | i), works with binned o
 		
 		if((redshiftshear.beta_p>0.) && (redshiftshear.histogram_zbins == 0 ))
 		{
-				H.function = &int_for_zdistr_photoz;
+			H.function = &int_for_zdistr_photoz;
 		}
 		gsl_integration_qag (&H,redshiftshear.zdistrpar_zmin,redshiftshear.zdistrpar_zmax, 0, 1.e-3, 1000, GSL_INTEG_GAUSS41,w, &norm, &error); 
 		gsl_integration_workspace_free(w);
@@ -1215,11 +1203,11 @@ double zdistr_photoz(double z,int i) //returns p(ztrue | i), works with binned o
 	if(redshiftshear.histogram_zbins != 0)
 	{
 		if((redshiftshear.zdistrpar_zmin || redshiftshear.zdistrpar_zmax) && (z>redshiftshear.zdistrpar_zmax || z<redshiftshear.zdistrpar_zmin)) return 0.0;
-		return int_for_zdistr_mock_photoz(z)/norm;
+		return int_for_zdistr_mock_photoz(z,(void*)array)/norm;
 	}
 	
 	if((redshiftshear.zdistrpar_zmin || redshiftshear.zdistrpar_zmax) && (z>redshiftshear.zdistrpar_zmax || z<redshiftshear.zdistrpar_zmin)) return 0.0;
-	return norm*int_for_zdistr_photoz(z);
+	return int_for_zdistr_photoz(z,(void*)array)/norm;
 }
 
 double int_for_zdistr(double z)
