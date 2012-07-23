@@ -400,14 +400,14 @@ double p_zphot(double zp, double zs){
 double p_zspec(double zs, double zp){
 	static double init = -42.;
 	static double **table_z = 0;
-	static double zmin = 0.04, zmax = 1.96, dz = 0.08;
+	static double zmin = 0.01, zmax = 1.99, dz = 0.02;
 	double norm;
 	if (init != 1.0){
 		if (!table_z) {table_z = sm2_matrix(0, table_N_zs-1, 0, table_N_zp-1);}
 		FILE *ein;
 		int i,j;
 		double a2,a3,a4,z,z1;
-		ein = fopen("./distr_zphot_zspec","r");
+		ein = fopen("./distr_zphot_zspec_100","r");
 		for (i = 0; i< table_N_zs; i++){
 			for (j = 0; j< table_N_zp; j++){
 				fscanf(ein,"%le %le %le %le %le",&z1,&a2,&a3,&a4,&z);

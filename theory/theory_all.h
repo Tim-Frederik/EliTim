@@ -14,8 +14,8 @@
 #define table_N_DS    1000
 #define table_N_halo_s  100
 #define table_N_xi_nongauss  1000
-#define table_N_zs 25
-#define table_N_zp 25
+#define table_N_zs 100
+#define table_N_zp 100
 
 /* ============================================================ *
  * Cosmology.							*
