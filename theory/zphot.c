@@ -218,7 +218,7 @@ void set_redshift_DES()
 	redshiftshear.z0        = 1.0;
 	redshiftshear.beta_p    = 0.;
 	redshiftshear.alpha   =    0.;
-	redshiftshear.zdistrpar_zmin = 0.;
+	redshiftshear.zdistrpar_zmin = 0.11;
 	redshiftshear.zdistrpar_zmax = 3.0;
 	sprintf(redshiftshear.REDSHIFT_FILE,"dummy");
 	redshiftshear.histogram_zbins=0;
@@ -348,7 +348,7 @@ void set_tomo_BCC()
 	sheartomo.zmax[3]      = 0.0;
 	sheartomo.zmax[4]      = 0.0;
 	
-	sheartomo.zmin[0]      = 0.01;
+	sheartomo.zmin[0]      = 0.11;
 	sheartomo.zmin[1]      = 0.34;
 	sheartomo.zmin[2]      = 0.9;
 	sheartomo.zmin[3]      = 0.0;
@@ -416,7 +416,9 @@ double p_zspec(double zs, double zp){
 		}
 		init = 1.0;
 	}
-	if (zs < zmin || zp < zmin || zs> zmax ||zp> zmax){return 0;}
+	if (zs < zmin && zp >zmin && zp < zmax){eturn sm2_interpol2d(table_z,table_N_zs, zmin, zmax,dz,zmin,table_N_zp, zmin, zmax,dz,zp,1.0,1.0)/dz;}
+	if (zp < zmin && zs >zmin && zs < zmax){eturn sm2_interpol2d(table_z,table_N_zs, zmin, zmax,dz,zs,table_N_zp, zmin, zmax,dz,zmin,1.0,1.0)/dz;}
+	else if (zs> zmax ||zp> zmax){return 0;}
 	else{ return sm2_interpol2d(table_z,table_N_zs, zmin, zmax,dz,zs,table_N_zp, zmin, zmax,dz,zp,1.0,1.0)/dz;}
 }
 double int_for_zdistr_photoz_inner(double z, void *params)
@@ -466,7 +468,7 @@ double int_for_zdistr_mock_photoz_inner(double z, void *params)
 		
 		for (i=0;i<redshiftshear.histogram_zbins;i++){
 			fscanf(ein,"%le %le %le %le\n",&space1,&z_vector[i],&space2,&Nz_vector[i]);
-			printf("%le %le\n",z_vector[i],Nz_vector[i]);
+		//	printf("%le %le\n",z_vector[i],Nz_vector[i]);
 		}
 		fclose(ein);
 		table=1;
@@ -477,12 +479,11 @@ double int_for_zdistr_mock_photoz_inner(double z, void *params)
 		sm2_free_vector(z_vector,0,redshiftshear.histogram_zbins-1);    
 		sm2_free_vector(Nz_vector,0,redshiftshear.histogram_zbins-1);
 		
-		printf("USING 4 column z-distrib\n");
+		//printf("USING 4 column z-distrib\n");
 	}
-	if((z<zhisto_min) && (z>=redshiftshear.zdistrpar_zmin)) z=0.11;
-	if((z>zhisto_max) && (z<=redshiftshear.zdistrpar_zmax)) z=1.99;   
+	if((z<zhisto_min) && (z>=redshiftshear.zdistrpar_zmin)) return 0.0;
+	if((z>zhisto_max) && (z<=redshiftshear.zdistrpar_zmax)) return 0.0; 
 	val= gsl_spline_eval(redshift_distrib_spline,z,zaccel5)*p_zspec(ztrue,z);
-	//printf("%le\n",val);
 	if (isnan(val))  printf("Redshift range exceeded: z=%le\n",z);
 	return val;
 }
@@ -491,7 +492,13 @@ double int_for_zdistr_mock_photoz(double ztrue, void *params)
 	double *array = (double*)params;
     double result,error;
 	array[2] = ztrue;
-    gsl_integration_workspace *w;
+	double z,dz;
+	dz = (array[1]-array[0])/100.0;
+	result = 0.0;
+	for (z = array[0] + 0.5*dz;z < array[1]; z += dz){
+		result += int_for_zdistr_mock_photoz_inner(z,(void*)array)*dz;
+	}
+/*    gsl_integration_workspace *w;
     gsl_function H;
 	
     w = gsl_integration_workspace_alloc (1000);
@@ -501,12 +508,12 @@ double int_for_zdistr_mock_photoz(double ztrue, void *params)
     
     gsl_integration_qag (&H,array[0],array[1], 0, 1.e-3, 1000, GSL_INTEG_GAUSS41,
 						 w, &result, &error); 
-    gsl_integration_workspace_free(w);
+    gsl_integration_workspace_free(w);*/
     return result;
 }
 double zdistr_photoz(double z,int i) //returns p(ztrue | i), works with binned or analytic distributions; i =-1 -> no tomography; i>= 0 -> tomography bin i
 {
-	static double norm = 0.;
+	static double norm[6] = {-42.0,-42.0,-42.0,-42.0,-42.0,-42.0};
 	static double BETA_P = -42.;
 	static double ALPHA  = -42.;
 	static double Z0     = -42.;
@@ -516,26 +523,36 @@ double zdistr_photoz(double z,int i) //returns p(ztrue | i), works with binned o
 	if (i < 0){array[0] = redshiftshear.zdistrpar_zmin; array[1] = redshiftshear.zdistrpar_zmax;}
 	if (i>= 0 && i < sheartomo.Nbin){array[0] =sheartomo.zmin[i];array[1] = sheartomo.zmax[i];}
 	//First, compute the normalization
-	if (ALPHA != redshiftshear.alpha || BETA_P != redshiftshear.beta_p || Z0 != redshiftshear.z0 || ZMIN !=redshiftshear.zdistrpar_zmin || ZMAX !=redshiftshear.zdistrpar_zmax)
+	if (norm[i+1]< 0 || ALPHA != redshiftshear.alpha || BETA_P != redshiftshear.beta_p || Z0 != redshiftshear.z0 || ZMIN !=redshiftshear.zdistrpar_zmin || ZMAX !=redshiftshear.zdistrpar_zmax)
 	{
-		gsl_integration_workspace *w;
+/*		gsl_integration_workspace *w;
 		gsl_function H;
 		
 		w = gsl_integration_workspace_alloc (1000);
 		
-		H.params = (void*)array;
+		H.params = (void*)array;*/
+		double zi,dz;
+		dz = (redshiftshear.zdistrpar_zmax-redshiftshear.zdistrpar_zmin)/200.0;
+		norm[i+1] = 0.0;
 		
 		if(redshiftshear.histogram_zbins != 0 )
 		{ 			
-			H.function = &int_for_zdistr_mock_photoz;
+			for (zi = redshiftshear.zdistrpar_zmin + 0.5*dz;zi < redshiftshear.zdistrpar_zmax; zi += dz){
+				norm[i+1] += int_for_zdistr_mock_photoz(zi,(void*)array)*dz;
+			}
+			//H.function = &int_for_zdistr_mock_photoz;
 		}
 		
 		if((redshiftshear.beta_p>0.) && (redshiftshear.histogram_zbins == 0 ))
 		{
-			H.function = &int_for_zdistr_photoz;
+			for (zi = redshiftshear.zdistrpar_zmin + 0.5*dz;zi < redshiftshear.zdistrpar_zmax; zi += dz){
+				norm[i+1] += int_for_zdistr_mock_photoz(zi,(void*)array)*dz;
+			}
+			
+			//H.function = &int_for_zdistr_photoz;
 		}
-		gsl_integration_qag (&H,redshiftshear.zdistrpar_zmin,redshiftshear.zdistrpar_zmax, 0, 1.e-3, 1000, GSL_INTEG_GAUSS41,w, &norm, &error); 
-		gsl_integration_workspace_free(w);
+		//gsl_integration_qag (&H,redshiftshear.zdistrpar_zmin,redshiftshear.zdistrpar_zmax, 0, 1.e-3, 1000, GSL_INTEG_GAUSS41,w, &norm, &error); 
+		//gsl_integration_workspace_free(w);
 		ALPHA  = redshiftshear.alpha;
 		BETA_P = redshiftshear.beta_p;
 		Z0     = redshiftshear.z0;
@@ -543,15 +560,14 @@ double zdistr_photoz(double z,int i) //returns p(ztrue | i), works with binned o
 		ZMAX   = redshiftshear.zdistrpar_zmax;
 	}
 	
-	
 	if(redshiftshear.histogram_zbins != 0)
 	{
 		if((redshiftshear.zdistrpar_zmin || redshiftshear.zdistrpar_zmax) && (z>redshiftshear.zdistrpar_zmax || z<redshiftshear.zdistrpar_zmin)) return 0.0;
-		return int_for_zdistr_mock_photoz(z,(void*)array)/norm;
+		return int_for_zdistr_mock_photoz(z,(void*)array)/norm[i+1];
 	}
 	
 	if((redshiftshear.zdistrpar_zmin || redshiftshear.zdistrpar_zmax) && (z>redshiftshear.zdistrpar_zmax || z<redshiftshear.zdistrpar_zmin)) return 0.0;
-	return int_for_zdistr_photoz(z,(void*)array)/norm;
+	return int_for_zdistr_photoz(z,(void*)array)/norm[i+1];
 }
 
 double int_for_zdistr(double z)
@@ -582,7 +598,7 @@ double int_for_zdistr_mock(double z)
 		
 		for (i=0;i<redshiftshear.histogram_zbins;i++){
 			fscanf(ein,"%le %le %le %le\n",&space1,&z_vector[i],&space2,&Nz_vector[i]);
-			printf("%le %le\n",z_vector[i],Nz_vector[i]);
+			//printf("%le %le\n",z_vector[i],Nz_vector[i]);
 		}
 		fclose(ein);
 		table=1;
@@ -593,7 +609,7 @@ double int_for_zdistr_mock(double z)
 		sm2_free_vector(z_vector,0,redshiftshear.histogram_zbins-1);    
 		sm2_free_vector(Nz_vector,0,redshiftshear.histogram_zbins-1);
 		
-		printf("USING 4 column z-distrib\n");
+		//printf("USING 4 column z-distrib\n");
 	}
 	if((z<zmin) && (z>=redshiftshear.zdistrpar_zmin)) z=0.11;
 	if((z>zmax) && (z<=redshiftshear.zdistrpar_zmax)) z=1.99;   
@@ -664,23 +680,30 @@ double zdistr(double z)
 
 int main(){
 	double z;
-	double a1,a2,a3,b1,b2,b3,t[3];
+	double a1,a2,a3,b1,b2,b3,t[3],A[3];
 	int i;
 	set_redshift_BCC();
 	set_tomo_BCC();
 	sprintf(redshiftshear.REDSHIFT_FILE,"../../z_histo_bin95_larger_z01");
-	for (z =0.05; z<1.9;z+=.05){
+	for (z =0.02; z<1.99;z+=.01){
 		for (i = 0; i<=2; i++){
 			if (z > sheartomo.zmin[i] && z< sheartomo.zmax[i]){t[i] = zdistr(z);}
+			else{t[i]= 0.0;}
+			A[i] += t[i]*0.01;
+		}
+	}
+	for (z =0.02; z<1.99;z+=.01){
+		for (i = 0; i<=2; i++){
+			if (z > sheartomo.zmin[i] && z< sheartomo.zmax[i]){t[i] = zdistr(z)/A[i];}
 			else{t[i]= 0.0;}
 		}
 		b1 = zdistr_photoz(z,0);
 		b2 = zdistr_photoz(z,1);
 		b3 = zdistr_photoz(z,2);
 		printf("%e   %e %e  %e %e  %e %e\n",z,t[0],b1,t[1],b2,t[2],b3);
-		a1 += b1*0.05;
-		a2 += b2*0.05;
-		a3 += b3*0.05;
+		a1 += b1*0.01;
+		a2 += b2*0.01;
+		a3 += b3*0.01;
 	}
 	printf("%e %e %e\n",a1,a2,a3);
 }
