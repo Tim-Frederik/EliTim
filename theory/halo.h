@@ -57,6 +57,14 @@ double tri_lin_cov(double k1, double k2, double a);
 double tri_1h_cov(double k1, double k2, double a);
 double tri_2h_cov(double k1, double k2, double a);
 
+double inner_project_tri_1h_cov_tomo(double a, void *params);
+double inner_project_tri_lin_cov_tomo(double a,void *params);
+double inner_project_tri_2h_cov_tomo(double a,void *params);
+double project_tri_2h_cov_tomo(double l1,double l2, int z1, int z2, int z3, int z4);
+double project_tri_1h_cov_tomo(double l1,double l2, int z1, int z2, int z3, int z4);
+double project_tri_lin_cov_tomo(double l1,double l2, int z1, int z2, int z3, int z4);
+double HSV_cov_tomo(double l1, double l2, double fsky, int z1, int z2, int z3, int z4);
+double int_for_HSV_tomo(double a, void *params);
 
 
 

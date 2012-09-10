@@ -38,15 +38,16 @@ redshiftshearpara redshiftshear = {
 };
 
 sheartomopara sheartomo = {
-  3,
-  0.34,
-  0.9,
-  2.0,
+  0,
+  0,
   0.0,
   0.0,
   0.0,
-  0.34,
-  0.9,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
   0.0,
   0.0
 };
@@ -71,7 +72,8 @@ configpara configuration = {
 globalpara global = {
   0.0,
   0.0,
-  0.0
+  0.0,
+  -1
 };
 
 nuisancepara nuisance = {
@@ -141,6 +143,27 @@ void set_cosmological_parameters_to_tak()
   cosmology.ombh2=cosmology.omb*cosmology.h0*cosmology.h0;
   cosmology.rho_m = 7.4775e+21*cosmology.Omega_m;//cosmology.h0;	
   //  printf("Cosmology set to WMAP_7years_only\n");
+  cosmology.bias=1.0;
+  cosmology.rcorr = 1.0;
+}
+
+
+
+void set_cosmological_parameters_to_OWLS()
+{
+  cosmology.Omega_m   = 0.238;
+  cosmology.Omega_v   = 0.762;
+  cosmology.sigma_8   = 0.74;
+  cosmology.n_spec    = 0.951;
+  cosmology.nonlinear = 1;
+  cosmology.w0=-1.;
+  cosmology.wa=0.;
+  cosmology.omb=0.0418;
+  cosmology.h0=0.73;
+  cosmology.omh2=cosmology.Omega_m*cosmology.h0*cosmology.h0;
+  cosmology.ombh2=cosmology.omb*cosmology.h0*cosmology.h0;
+  cosmology.rho_m = 7.4775e+21*cosmology.Omega_m;//cosmology.h0;	
+  printf("Cosmology set to OWLS\n");
   cosmology.bias=1.0;
   cosmology.rcorr = 1.0;
 }
@@ -348,7 +371,7 @@ void set_tomo_BCC()
 
 void set_tomo_DES_conti()
 {
-//  sprintf(redshiftshear.REDSHIFT_FILE,"BCC_z-distribution");
+printf("set_tomo_DES_conti\n");
   sheartomo.Nbin        = 5;
   sheartomo.zmax[0]      = 1.06;
   sheartomo.zmax[1]      = 1.49;

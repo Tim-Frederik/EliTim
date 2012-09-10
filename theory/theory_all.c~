@@ -182,13 +182,11 @@ double Tsqr_EH_wiggle(double kk)
   f_hdm,		/* Massive Neutrino fraction */
   growth_k0,	/* D_1(z) -- the growth function as k->0 */
   growth_to_z0,	/* D_1(z)/D_1(0) -- the growth relative to z=0 */
-  k_equality,	/* The comoving wave number of the horizon at equality*/
   obhh,		/* Omega_baryon * hubble^2 */
   omega_curv,	/* = 1 - omega_matter - omega_lambda */
   omega_lambda_z, /* Omega_lambda at the given redshift */
   omega_matter_z,	/* Omega_matter at the given redshift */
   omhh,		/* Omega_matter * hubble^2 */
-  onhh,		/* Omega_hdm * hubble^2 */
   p_c,		/* The correction to the exponent before drag epoch */
   p_cb,		/* The correction to the exponent after drag epoch */
   sound_horizon_fit,  /* The sound horizon at the drag epoch */
@@ -200,7 +198,6 @@ double Tsqr_EH_wiggle(double kk)
   /* The following are set in TFmdm_onek_mpc() */
   double static gamma_eff,	/* Effective \Gamma */
   growth_cb,	/* Growth factor for CDM+Baryon perturbations */
-  growth_cbnu,	/* Growth factor for CDM+Baryon+Neutrino pert. */
   max_fs_correction,  /* Correction near maximal free streaming */
   qq,		/* Wavenumber rescaled by \Gamma */
   qq_eff,		/* Wavenumber rescaled by effective Gamma */
@@ -210,10 +207,9 @@ double Tsqr_EH_wiggle(double kk)
   y_freestream; 	/* The epoch of free-streaming for a given scale */
   
   /* Finally, TFmdm_onek_mpc() and TFmdm_onek_hmpc() give their answers as */
-  double  static tf_cb,		/* The transfer function for density-weighted
+  double  static tf_cb; 	/* The transfer function for density-weighted
   CDM + Baryon perturbations. */
-  tf_cbnu;	/* The transfer function for density-weighted
-  CDM + Baryon + Massive Neutrino perturbations. */
+
   
   if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || OMB !=cosmology.omb || H0 !=cosmology.h0)
   {
@@ -241,7 +237,6 @@ double Tsqr_EH_wiggle(double kk)
     omega_curv = 1.0-cosmology.Omega_m-cosmology.Omega_v;
     omhh = cosmology.Omega_m*SQR(cosmology.h0);
     obhh = cosmology.omb*SQR(cosmology.h0);
-    onhh = omega_hdm*SQR(cosmology.h0);
     f_baryon = cosmology.omb/cosmology.Omega_m;
     f_hdm = omega_hdm/cosmology.Omega_m;
     f_cdm = 1.0-f_baryon-f_hdm;
@@ -250,7 +245,7 @@ double Tsqr_EH_wiggle(double kk)
     
     /* Compute the equality scale. */
     z_equality = 25000.0*omhh/SQR(SQR(theta_cmb));	/* Actually 1+z_eq */
-    k_equality = 0.0746*omhh/SQR(theta_cmb);
+   
     
  //!!!!!!!! added this line as Transfer function is calculated at time of matter-rad equality
 double  redshift=z_equality;  
@@ -293,7 +288,6 @@ double  redshift=z_equality;
   temp1 = pow(growth_k0, 1.0-p_cb);
   temp2 = pow(growth_k0/(1+y_freestream),0.7);
   growth_cb = pow(1.0+temp2, p_cb/0.7)*temp1;
-  growth_cbnu = pow(pow(f_cb,0.7/p_cb)+temp2, p_cb/0.7)*temp1;
   
   /* Compute the master function */
   gamma_eff =omhh*(alpha_gamma+(1-alpha_gamma)/(1+SQR(SQR(kk*sound_horizon_fit*0.43))));
@@ -309,7 +303,6 @@ double  redshift=z_equality;
   
   /* Now compute the CDM+HDM+baryon transfer functions */
   tf_cb = tf_master*growth_cb/growth_k0;
-  tf_cbnu = tf_master*growth_cbnu/growth_k0;
   return tf_cb*tf_cb*pow(kk,cosmology.n_spec);
 }
 
@@ -1060,6 +1053,7 @@ double int_for_zdistr(double z)
 }
 
 
+
 double int_for_zdistr_mock(double z)
 {
   int i; 
@@ -1067,7 +1061,6 @@ double int_for_zdistr_mock(double z)
   char filename[200];
   FILE *ein;
   int static table=0;
-  double static zmax,zmin;
   
   if (table!=1){
     z_vector=sm2_vector(0, redshiftshear.histogram_zbins-1);
@@ -1081,21 +1074,16 @@ double int_for_zdistr_mock(double z)
     
     for (i=0;i<redshiftshear.histogram_zbins;i++){
       fscanf(ein,"%le %le %le %le\n",&space1,&z_vector[i],&space2,&Nz_vector[i]);
-      printf("%le %le\n",z_vector[i],Nz_vector[i]);
+    //  printf("%le %le\n",z_vector[i],Nz_vector[i]);
     }
     fclose(ein);
     table=1;
     gsl_spline_init (redshift_distrib_spline, z_vector,Nz_vector,redshiftshear.histogram_zbins);    
-    zmax=z_vector[redshiftshear.histogram_zbins-1];
-    zmin=z_vector[0];
-    
     sm2_free_vector(z_vector,0,redshiftshear.histogram_zbins-1);    
     sm2_free_vector(Nz_vector,0,redshiftshear.histogram_zbins-1);
     
     printf("USING 4 column z-distrib\n");
   }
-  if((z<0.11) && (z>=redshiftshear.zdistrpar_zmin)) z=0.11;
-  if((z>1.99) && (z<=redshiftshear.zdistrpar_zmax)) z=1.99;   
   val= gsl_spline_eval(redshift_distrib_spline,z,zaccel5);
   //printf("%le\n",val);
   if (isnan(val))  printf("Redshift range exceeded: z=%le\n",z);
@@ -1103,62 +1091,76 @@ double int_for_zdistr_mock(double z)
 }
 
 
+
+
+/*
+double int_for_zdistr_mock(double z)
+{
+  int i; 
+  double val,*z_vector,*Nz_vector,space1,space2;
+  char filename[200];
+  FILE *ein;
+  int static table=0;
+  double static zmax,zmin,zmaxint,zminint;
+  
+  if (table!=1){
+    z_vector=sm2_vector(0, redshiftshear.histogram_zbins-1);
+    Nz_vector=sm2_vector(0, redshiftshear.histogram_zbins-1);
+    const gsl_interp_type *redshift_t5 = gsl_interp_cspline;
+    zaccel5 = gsl_interp_accel_alloc();
+    redshift_distrib_spline = gsl_spline_alloc (redshift_t5,redshiftshear.histogram_zbins);
+    sprintf(filename,"%s",redshiftshear.REDSHIFT_FILE);	  
+    printf("%s\n",filename);
+    ein=fopen(filename,"r");
+    
+    for (i=0;i<redshiftshear.histogram_zbins;i++){
+      fscanf(ein,"%le %le %le %le\n",&space1,&z_vector[i],&space2,&Nz_vector[i]);
+    //  printf("%le %le\n",z_vector[i],Nz_vector[i]);
+      if(i==0) {
+	zmin=space1;
+	zminint=z_vector[i];
+      }
+      if(i==redshiftshear.histogram_zbins-1){
+	zmax=space2;
+	zmaxint=z_vector[i];
+      }
+    }
+    fclose(ein);
+    table=1;
+    gsl_spline_init (redshift_distrib_spline, z_vector,Nz_vector,redshiftshear.histogram_zbins);    
+    sm2_free_vector(z_vector,0,redshiftshear.histogram_zbins-1);    
+    sm2_free_vector(Nz_vector,0,redshiftshear.histogram_zbins-1);
+    
+    printf("USING 4 column z-distrib\n");
+  }
+  if((z<zminint) && (z>=redshiftshear.zdistrpar_zmin)) z=zmin;
+  if((z>zmaxint) && (z<=redshiftshear.zdistrpar_zmax)) z=zmax;   
+  val= gsl_spline_eval(redshift_distrib_spline,z,zaccel5);
+  //printf("%le\n",val);
+  if (isnan(val))  printf("Redshift range exceeded:%le %le %le %le z=%le\n",zmin,zmax,zminint,zmaxint,z);
+  return val;
+}
+*/
+
+
 double zdistr(double z)
 {
   static double norm = 0.;
-  static double BETA_P = -42.;
-  static double ALPHA  = -42.;
-  static double Z0     = -42.;
-  static double ZMIN   = -42.;
-  static double ZMAX   = -42.;
-  double x, f;
+  int static normi =-42;
   //First, compute the normalization
-  if (ALPHA != redshiftshear.alpha || BETA_P != redshiftshear.beta_p || Z0 != redshiftshear.z0 || ZMIN !=redshiftshear.zdistrpar_zmin || ZMAX !=redshiftshear.zdistrpar_zmax)
-  {
-    if(redshiftshear.histogram_zbins != 0 )
-    {       //use redshift distribution numeric normalization
-    //printf("Using redshift distribution REDSHIFT_FILE %le %le\n",redshiftshear.zdistrpar_zmin,redshiftshear.zdistrpar_zmax);
+    if(normi != 0 )
+      {       
     norm = sm2_qromb(int_for_zdistr_mock,redshiftshear.zdistrpar_zmin,redshiftshear.zdistrpar_zmax);
-    //printf("norm=%le\n",norm);
-    }
-    
-    if((redshiftshear.beta_p>0.) && (redshiftshear.histogram_zbins == 0 ))
-    {
-      //                      if(redshiftshear.zdistrpar_zmin || redshiftshear.zdistrpar_zmax)
-      {       //with cuts: use numeric normalization
-      norm = 1.0/(sm2_qromb(int_for_zdistr,redshiftshear.zdistrpar_zmin,redshiftshear.zdistrpar_zmax));
+      normi=0;
+      //printf("norm=%le\n",norm);
       }
-    }
-    ALPHA  = redshiftshear.alpha;
-    BETA_P = redshiftshear.beta_p;
-    Z0     = redshiftshear.z0;
-    ZMIN   = redshiftshear.zdistrpar_zmin;
-    ZMAX   = redshiftshear.zdistrpar_zmax;
-  }
-  
-  
-  if(redshiftshear.histogram_zbins != 0)
-  {
-    if((redshiftshear.zdistrpar_zmin || redshiftshear.zdistrpar_zmax) && (z>redshiftshear.zdistrpar_zmax || z<redshiftshear.zdistrpar_zmin)) return 0.0;
-    //printf("int_for_zdistr_mock %le %le %le %le\n",z,int_for_zdistr_mock(z),norm,int_for_zdistr_mock(z)/norm);
-    return int_for_zdistr_mock(z)/norm;
-  }
-  
-  if((redshiftshear.zdistrpar_zmin || redshiftshear.zdistrpar_zmax) && (z>redshiftshear.zdistrpar_zmax || z<redshiftshear.zdistrpar_zmin)) return 0.0;
-  if (z<0 && z<-1e-6)
-  {
-    printf("Negative z in %s, line%d \n",__FILE__,__LINE__);
-  }
-  if (z<0) x = 0;
-  else x = z/redshiftshear.z0;
-  if (fabs(redshiftshear.beta_p - 1.) < 1e-6) {
-    f = x;
-  } else {
-    f = pow(x,redshiftshear.beta_p);
-  }
-  f=exp(-f);
-  return norm*pow(x,redshiftshear.alpha)*f;
+    if(z>redshiftshear.zdistrpar_zmax || z<redshiftshear.zdistrpar_zmin) return 0.0;
+    return int_for_zdistr_mock(z)/norm;    
 }
+
+
+
+
 
 /*************************************************************************************/
 /* ! global variable 'global.aglob' is needed here ! */
@@ -1168,7 +1170,7 @@ double int_for_g(double aprime)
   chi_glob = chi(global.aglob);
   chi_prime = chi(aprime);
   val=zdistr(1./aprime-1.)*f_K(chi_prime-chi_glob)/f_K(chi_prime)/(aprime*aprime);
-  
+  //if ((1./aprime-1.)>0.11 && (1./aprime-1.)<0.3325) printf("no tomo %le %le\n",1./aprime-1.,zdistr(1./aprime-1.));
   return val;
 }
 
@@ -1180,48 +1182,37 @@ double g_source(double a)
   static double W_0= -42.;
   static double W_A = -42.;
   
-  static double BETA_P  = -42.;
-  static double ALPHA  = -42.;
-  static double Z0      = -42.;
   static double Z_MAX  = -42.;
   static double Z_MIN   = -42.;
   static double *table;
   
   static double da = 0.0;
-  double aa, chi_delta;
+  double aa;
   int i;
-  /*case of single source redshift at redshiftshear.z0, p(w) = delta(w-w0) */
-  if ((redshiftshear.beta_p == 0.0) && (redshiftshear.histogram_zbins == 0)) {
-    aa = 1./(1.+redshiftshear.z0);
-    if (a<=aa) return 0.0;
-    chi_delta = chi(aa);
-    return f_K(chi_delta-chi(a))/f_K(chi_delta);
-  }
-  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W_0 != cosmology.w0   || W_A!= cosmology.wa  || BETA_P != redshiftshear.beta_p || ALPHA != redshiftshear.alpha || Z0 != redshiftshear.z0 ||Z_MAX !=redshiftshear.zdistrpar_zmax ||Z_MIN !=redshiftshear.zdistrpar_zmin) 
+ 
+  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W_0 != cosmology.w0   || W_A!= cosmology.wa  ||Z_MAX !=redshiftshear.zdistrpar_zmax ||Z_MIN !=redshiftshear.zdistrpar_zmin) 
   {
     if (table!=0) sm2_free_vector(table, 0, table_N_a-1);
     table   = sm2_vector(0, table_N_a-1);
-    da = (1.-limits.a_min)/(table_N_a-1.);
-    table[0] = 0.0;
-    aa = limits.a_min+da;
+    da = (0.999999-limits.a_min)/(table_N_a-1.);
+    //table[0] = 0.0;
+    aa = limits.a_min;
     /*case of redshift distribution */
-    for (i=1;i<table_N_a-1;i++,aa+=da) {
+    for (i=0;i<table_N_a;i++,aa+=da) {
       global.aglob = aa;
       table[i] = sm2_qromb(int_for_g, limits.a_min, aa);
+      printf("%le %le\n",1./aa-1,table[i]);
     }
     table[table_N_a-1] = 1.;
     OMEGA_M = cosmology.Omega_m ;
     OMEGA_V = cosmology.Omega_v ;
     W_0 = cosmology.w0 ;
     W_A = cosmology.wa ;
-    
-    BETA_P  =   redshiftshear.beta_p;
-    ALPHA   =   redshiftshear.alpha;
-    Z0      =   redshiftshear.z0;
+  
     Z_MAX   =   redshiftshear.zdistrpar_zmax;
     Z_MIN   =   redshiftshear.zdistrpar_zmin;
   }
-  return sm2_interpol(table, table_N_a, limits.a_min, 1., da, a, 1.0, 1.0);
+  return sm2_interpol(table, table_N_a, limits.a_min, 0.999999, da, a, 1.0, 1.0);
 }
 
 
@@ -1257,9 +1248,6 @@ double P_shear_shear(double s)
   static double H0   = -42.;
   static double SIGMA_8 = -42.;
   
-  static double BETA_P  = -42.;
-  static double ALPHA  = -42.;
-  static double Z0      = -42.;
   static double Z_MAX  = -42.;
   static double Z_MIN   = -42.;
   
@@ -1268,7 +1256,7 @@ double P_shear_shear(double s)
   double f1,slog,f2;
   int i;
   
-  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 != cosmology.h0 || SIGMA_8 != cosmology.sigma_8 || BETA_P != redshiftshear.beta_p || ALPHA != redshiftshear.alpha || Z0 != redshiftshear.z0 ||Z_MAX !=redshiftshear.zdistrpar_zmax || Z_MIN !=redshiftshear.zdistrpar_zmin)
+  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 != cosmology.h0 || SIGMA_8 != cosmology.sigma_8  ||Z_MAX !=redshiftshear.zdistrpar_zmax || Z_MIN !=redshiftshear.zdistrpar_zmin)
   {
     logsmin = log(limits.P_2_s_min);
     logsmax = log(limits.P_2_s_max);
@@ -1290,9 +1278,6 @@ double P_shear_shear(double s)
     SIGMA_8 =  cosmology.sigma_8;
     W0      = cosmology.w0;
     WA      = cosmology.wa;
-    BETA_P  =   redshiftshear.beta_p;
-    ALPHA   = redshiftshear.alpha;
-    Z0      =   redshiftshear.z0;
     Z_MAX   = redshiftshear.zdistrpar_zmax;
     Z_MIN   = redshiftshear.zdistrpar_zmin;
   }
@@ -2484,8 +2469,6 @@ double int_for_p_II(double a)
   res= res*Delta_nl_halo(a,k/cosmology.coverH0)*IIz/k/k/k; 
   return res;
 }
-
-
 
 
 double P_II(double s) 

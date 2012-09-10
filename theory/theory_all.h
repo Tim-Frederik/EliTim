@@ -3,7 +3,7 @@
 
 #include "fftw3.h"
 
-#define table_N_a     100
+#define table_N_a     200
 #define table_N_k     1000
 #define table_N_s    200
 #define table_N_klin 200
@@ -58,13 +58,12 @@ void getH0fromCMB(double *xstar, double *stuff);
 double int_for_chi(double a);
 double chi(double a);
 
-
-double g_source(double a);
 double f_K(double w);
 double G(double a);
 double int_for_g(double);
 double g_source(double a);
 double prob(double z);
+double zdistr(double z);
 double int_for_zdistr(double z);
 double int_for_zdistr_mock(double z);
 double int_for_p_shear_shear(double a);

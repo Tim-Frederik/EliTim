@@ -4,12 +4,13 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include "fftw3.h"
 #include "theory_all.h"
 #include "survey.h"
 #include "maths.h"
 #include "cosmology.h"
 #include "halo.h"
-#include "fftw3.h"
+#include "tomo.h"
 
 #include <gsl/gsl_integration.h>
 #include <gsl/gsl_odeiv.h>
@@ -25,6 +26,8 @@ extern con constants;
 extern lim limits;
 extern redshiftshearpara redshiftshear;
 extern redshiftclusteringpara redshiftclustering;
+extern globalpara global;
+
 
 /*==============================================================*/
 double int_GSL_integrate_qag2(double (*func)(double, void*),void *arg,double a, double b, double *error, int niter)
@@ -616,29 +619,6 @@ double tri_2h (double k1x,double k1y,double k2x,double k2y,double k3x,double k3y
   return tri_2h_22 (k1x, k1y, k2x, k2y, k3x, k3y, a) + tri_2h_13 (k1x, k1y, k2x, k2y, k3x, k3y, a);
 }
 
-
-/* ************************* Halo model convergence trispectra ******* */
-// static double inner_project_tomo_tri_lin (double a,void *params)
-// {
-//   
-//   double k1x,k1y,k2x,k2y,k3x,k3y,hoverh0,res,weight,wa;
-//   double *ar = (double *) params;
-//   wa = chi(a);
-//   k1x = ar[0]/wa;
-//   k1y = ar[1]/wa;
-//   k2x = ar[2]/wa;
-//   k2y = ar[3]/wa;
-//   k3x = ar[4]/wa;
-//   k3y = ar[5]/wa;
-//   const double m04 = t_lin(k1x,k1y,k2x,k2y,k3x,k3y,a);
-//   weight = 9./4.*cosmology.Omega_m*cosmology.Omega_m/(a*a)*(1-wa/w(ar[6]))*3./2.*cosmology.Omega_m/a*(1-wa/w(ar[7]));
-//   weight = pow(weight,2.);
-//   hoverh0 = sqrt(cosmology.Omega_m /(a*a*a) + (1.-cosmology.Omega_m -cosmology.Omega_v )/(a*a) + omv_vareos(a) );
-//   res= weight/pow(wa,2.)/hoverh0;
-//   res = res*m04;
-//   return res/(a*a); //a^-2 from change of integration variable dchi -> da
-// }
-
 static double inner_project_tri_lin (double a,void *params)
 {
   
@@ -661,30 +641,6 @@ static double inner_project_tri_lin (double a,void *params)
   return res/(a*a);
 }
 
-// static double inner_project_tomo_tri_1h (double a, void *params)
-// {
-//   double k1,k2,k3,k4,k1x,k1y,k2x,k2y,k3x,k3y,k4x,k4y,hoverh0,res,weight,wa;
-//   double *ar = (double *) params;
-//   wa = chi(a);
-//   k1x = ar[0]/wa;
-//   k1y = ar[1]/wa;
-//   k2x = ar[2]/wa;
-//   k2y = ar[3]/wa;
-//   k3x = ar[4]/wa;
-//   k3y = ar[5]/wa;
-//   k4x = -(ar[0]+ar[2]+ar[4])/wa; k4y = -(ar[1]+ar[3]+ar[5])/wa; 
-//   k1 = sqrt(k1x*k1x + k1y*k1y);
-//   k2 = sqrt(k2x*k2x+k2y*k2y);
-//   k3 = sqrt(k3x*k3x+k3y*k3y);
-//   k4 = sqrt(k4x*k4x+k4y*k4y);
-//   const double m04 = tri_1h(k1,k2,k3,k4,a);
-//   weight = 9./4.*cosmology.Omega_m*cosmology.Omega_m/(a*a)*(1-wa/w(ar[6]))*3./2.*cosmology.Omega_m/a*(1-wa/w(ar[7]));
-//   weight = pow(weight,2.);
-//   hoverh0 = sqrt(cosmology.Omega_m /(a*a*a) + (1.-cosmology.Omega_m -cosmology.Omega_v )/(a*a) + omv_vareos(a) );
-//   res= weight/pow(wa,2.)/hoverh0;
-//   res = res*m04;
-//   return res/(a*a);
-// }
 static double inner_project_tri_1h (double a, void *params)
 {
   double k1,k2,k3,k4,k1x,k1y,k2x,k2y,k3x,k3y,k4x,k4y,hoverh0,res,weight,wa;
@@ -710,26 +666,6 @@ static double inner_project_tri_1h (double a, void *params)
   return res/(a*a);
 }
 
-// static double inner_project_tomo_tri_2h (double a,void *params)
-// {
-//   
-//   double k1x,k1y,k2x,k2y,k3x,k3y,hoverh0,res,weight,wa;
-//   double *ar = (double *) params;
-//   wa = chi(a);
-//   k1x = ar[0]/wa;
-//   k1y = ar[1]/wa;
-//   k2x = ar[2]/wa;
-//   k2y = ar[3]/wa;
-//   k3x = ar[4]/wa;
-//   k3y = ar[5]/wa;
-//   const double m04 = tri_2h(k1x,k1y,k2x,k2y,k3x,k3y,a);
-//   weight = 9./4.*cosmology.Omega_m*cosmology.Omega_m/(a*a)*(1-wa/w(ar[6]))*3./2.*cosmology.Omega_m/a*(1-wa/w(ar[7]));
-//   weight = pow(weight,2.);
-//   hoverh0 = sqrt(cosmology.Omega_m /(a*a*a) + (1.-cosmology.Omega_m -cosmology.Omega_v )/(a*a) + omv_vareos(a) );
-//   res= weight/pow(wa,2.)/hoverh0;
-//   res = res*m04;
-//   return res/(a*a);
-// }
 
 static double inner_project_tri_2h (double a,void *params)
 {
@@ -789,127 +725,39 @@ double project_tri_lin (double l1x,double l1y,double l2x,double l2y,double l3x,d
   res =int_GSL_integrate_crude(inner_project_tri_lin,(void*)array,as,0.9999,NULL,1000);
   return res;
 }
-// double project_tomo_tri_2h (double l1x,double l1y,double l2x,double l2y,double l3x,double l3y,int nzi, int nzj){
-//   double as, array[8],res;
-//   if (nzi <= nzj){as = 1./(zbins.zi[nzj] +1.);}
-//   if (nzi > nzj){as = 1./(zbins.zi[nzi] +1.);}
-//   array[0] = l1x;
-//   array[1] = l1y;
-//   array[2] = l2x;
-//   array[3] = l2y;
-//   array[4] = l3x;
-//   array[5] = l3y;
-//   array[6] = 1./(zbins.zi[nzi]+1.);
-//   array[7] = 1./(zbins.zi[nzj]+1.);
-//   res =int_GSL_integrate_crude(inner_project_tomo_tri_2h,(void*)array,as,0.9999,NULL,1000);
-//   return res;
-// }
-// double project_tomo_tri_1h (double l1x,double l1y,double l2x,double l2y,double l3x,double l3y,int nzi, int nzj){
-//   double as, array[8],res;
-//   if (nzi <= nzj){as = 1./(zbins.zi[nzj] +1.);}
-//   if (nzi > nzj){as = 1./(zbins.zi[nzi] +1.);}
-//   array[0] = l1x;
-//   array[1] = l1y;
-//   array[2] = l2x;
-//   array[3] = l2y;
-//   array[4] = l3x;
-//   array[5] = l3y;
-//   array[6] = 1./(zbins.zi[nzi]+1.);
-//   array[7] = 1./(zbins.zi[nzj]+1.);
-//   res =int_GSL_integrate_crude(inner_project_tomo_tri_1h,(void*)array,as,0.9999,NULL,1000);
-//   return res;
-// }
-// double project_tomo_tri_lin (double l1x,double l1y,double l2x,double l2y,double l3x,double l3y,int nzi, int nzj){
-//   double as, array[8],res;
-//   if (nzi <= nzj){as = 1./(zbins.zi[nzj] +1.);}
-//   if (nzi > nzj){as = 1./(zbins.zi[nzi] +1.);}
-//   array[0] = l1x;
-//   array[1] = l1y;
-//   array[2] = l2x;
-//   array[3] = l2y;
-//   array[4] = l3x;
-//   array[5] = l3y;
-//   array[6] = 1./(zbins.zi[nzi]+1.);
-//   array[7] = 1./(zbins.zi[nzj]+1.);
-//   res =int_GSL_integrate_crude(inner_project_tomo_tri_lin,(void*)array,as,0.9999,NULL,1000);
-//   return res;
-// }
+
 
 /****************** Halo sample variance term (Sato et al. 2009) **********/
-
-/***convergence of projected NFW profiles (Takada & Jain 2003, Eqs. (26-28)***/
-double Gkappa(double x, double c){
-  double res =0.0;
-  if (x<= c ){
-    if ((x-1.0)> 1.e-14){ res = -pow(c*c-x*x,0.5)/((1.0-x*x)*(1.0+c))-1.0/pow(x*x-1.0,1.5)*acos((x*x+c)/(x*(1.0+c)));}
-    else if ((1.0-x)> 1.e-14 && x >= 1.e-14){ res = -pow(c*c-x*x,0.5)/((1.0-x*x)*(1.0+c))+1.0/pow(1.0-x*x,1.5)*acosh((x*x+c)/(x*(1.0+c)));}
-    else if (x<1.e-14){res = Gkappa(1.e-14,c);}
-    else {res =0.5*(Gkappa(0.999,c)+Gkappa(1.001,c));}
-  }
-  return res;
-}
-double kappa_nfw(double theta, double m, double a){
-  double c, wa,f,rv;
-  wa= chi(a);
-  c = conc(m,a); 
-  rv = r_vir(m,a);
-  f = 1./(log(1.0+c)-c/(1.0+c));
-  //	return 3./2.*cosmology.Omega_m*g_source(a)*wa/a*m/cosmology.rho_m*f*c*c/(constants.twopi*rv*rv)*Gkappa(c*theta*wa/rv,c);	
-  return cosmology.Omega_m*g_source(a)*wa/a*delta_vir(a)*rv*f*c*c*Gkappa(c*theta*wa/rv,c);	
-}
-double int_for_kappa_l_nfw(double theta, void *params){
-  double *ar = (double *) params;
-  //return constants.twopi*theta*gsl_sf_bessel_J0(theta*ar[5])* 3./2.*cosmology.Omega_m*g_source(a)*wa/a*m/cosmology.rho_m*f*c*c/(constants.twopi*rv*rv)*Gkappa(c*theta*wa/rv,c);	
-  // return constants.twopi*theta*gsl_sf_bessel_J0(theta*ar[5])* cosmology.Omega_m*g_source(a)*wa/a*delta_vir(a)*rv*f*c*c*Gkappa(c*theta*wa/rv,c);	
-  return constants.twopi*theta*gsl_sf_bessel_J0(theta*ar[5])*cosmology.Omega_m*g_source(ar[0])*ar[1]/ar[0]*delta_vir(ar[0])*ar[2]*ar[4]*ar[3]*ar[3]*Gkappa(ar[3]*theta*ar[1]/ar[2],ar[3]);	
-}
-double kappa_l_nfw(double l, double m, double a){
-  //	printf("called kappa_l\n");
-  double array[6],res =0;
-  double d,r,r2,thetav;
-  unsigned int n = 1;
-  array[0] = a;
-  array[1]= chi(a);
-  array[2] = r_vir(m,a);
-  array[3] =conc(m,a); 
-  array[4] = 1./(log(1.0+array[3])-array[3]/(1.0+array[3]));
-  array[5] = l;
-  thetav =array[2]/array[1];
-  r = gsl_sf_bessel_zero_J0(n)/l;
-  if (r > thetav){
-    res = int_GSL_integrate_qag2(int_for_kappa_l_nfw,(void*)array,1.e-3*r,r,NULL,1000);
-    n++;
-    r2 = gsl_sf_bessel_zero_J0(n)/l;
-    d = res;
-    while (fabs(d)> 1.e-3*fabs(res) && r2< thetav){
-      d = int_GSL_integrate_qag2(int_for_kappa_l_nfw,(void*)array,r,r2,NULL,1000);
-      res +=d;
-      r = r2; 
-      n++;
-      r2 = gsl_sf_bessel_zero_J0(n)/l;
-    }
-    d = int_GSL_integrate_qag2(int_for_kappa_l_nfw,(void*)array,r,thetav,NULL,1000);
-    res +=d;
-  } else {res = int_GSL_integrate_qag2(int_for_kappa_l_nfw,(void*)array,1.e-5*thetav,thetav,NULL,1000);}
-  //res = int_GSL_integrate_qag2(int_for_kappa_l_nfw,(void*)array,array[2]/array[1]*1.e-4,array[2]/array[1],NULL,1000); //array[2]/array[1] = theta_vir
-  //	printf("%e %e %e %e %i\n", m,thetav,l,res,n);
-  return res;
-  
+double inner_bI02 (double logm, void *para){
+	double *array = (double *) para;
+	double m = exp(logm);
+	long double u = 1.0;
+	double a= array[1];
+	double c = conc(m,a);
+	u = pow(1.e-5*u_nfw_c(c,array[0],m,a),2.0);
+	return massfunc(m,a)*B1(m,a)*m*pow(m/cosmology.rho_m,2.0)*u;
 }
 
-double int_for_kappa_mean (double logm, void *params){
-  double *ar = (double *) params;
-  double l = ar[0];
-  double a = ar[1];
-  return exp(logm)*massfunc(exp(logm),a)*B1(exp(logm),a)*pow(kappa_l_nfw(l, exp(logm),a),2.0);
+double bI02 (double k,double a){//one-halo term weighted by halo bias
+    double array[2];
+    double result,error;
+    gsl_integration_workspace *w;
+    gsl_function H;
+    
+	
+    array[0]=k;
+    array[1]=a;
+    
+    w = gsl_integration_workspace_alloc (2000);
+	
+    H.function = &inner_bI02;
+    H.params = (void*)array;
+    
+    gsl_integration_qag (&H,log(limits.M_min*100.0),log(limits.M_max), 0, 1.e-3, 2000, GSL_INTEG_GAUSS41, w, &result, &error);  // changed from 1e1 and 1e20
+    gsl_integration_workspace_free(w);
+    return result;
 }
-double kappa_mean (double l, double a){
-  double array[2],res;
-  array[0] = l;
-  array[1] = a;
-  res =int_GSL_integrate_l(int_for_kappa_mean,(void*)array,log(limits.M_min*100.0),log(limits.M_max),NULL,1000);
-  return res;
-}
+
 
 double int_for_variance (double logk, void *params){
   double *ar = (double *) params;
@@ -917,6 +765,8 @@ double int_for_variance (double logk, void *params){
   double x = pow(4.0*ar[1],0.5)*k*chi(ar[0]); //theta_s*k*chi(a)
   return k*k/constants.twopi*p_lin(k,ar[0])*pow(gsl_sf_bessel_J1(x)/x,2.0);
 }
+
+
 double survey_variance (double a, double fsky){
   static double OMEGA_M = -42.;
   static double OMEGA_B = -42.;
@@ -947,30 +797,32 @@ double survey_variance (double a, double fsky){
       result = int_GSL_integrate_qag2(int_for_variance,(void*)array,log(1.e-6),log(1.e+3),NULL,2000);
       table_SV[i]=result;
     }
-    
   }
   return sm2_interpol(table_SV, table_N_SV, amin, amax, da,a, 1.0,1.0 );
 }
 
+
+
 double int_for_HSV(double a, void *params){
-  double *ar = (double *) params;
-  double res,hoverh0;
-  hoverh0 =  sqrt(cosmology.Omega_m /(a*a*a) + (1.-cosmology.Omega_m -cosmology.Omega_v )/(a*a) + omv_vareos(a) );
-  res = pow(chi(a),4.0)*hoverh0/(a*a); //factor hoverh0/(a*a) from chain rule
-  res = res*kappa_mean(ar[0],a)*kappa_mean(ar[1],a);
-  res = res*survey_variance(a,ar[2]);
-  return res;
+	double *ar = (double *) params;
+	double hoverh0,weight,wa,res;
+	wa=chi(a);
+	weight = pow(3./2.*cosmology.Omega_m/a,4.0)*pow(g_source(a),4.0);
+	hoverh0 = sqrt(cosmology.Omega_m /(a*a*a) + (1.-cosmology.Omega_m -cosmology.Omega_v )/(a*a) + omv_vareos(a) );
+	res= weight/(hoverh0*a*a);//a^-2 from change of integration variable dchi -> da
+	return res*bI02(ar[0]/wa,a)*bI02(ar[1]/wa,a)*survey_variance(a,ar[2]);
 }
 
 double HSV_cov(double l1, double l2, double fsky){
-  double array[3],res = 0.0;
-  array[0] = l1;
-  array[1] = l2;
-  array[2] = fsky;
-  if (sqrt(l1*l2) >= 1.e+2){
-    res =int_GSL_integrate_crude(int_for_HSV,(void*)array,1./(1.0+redshiftshear.zdistrpar_zmax),0.99,NULL,1000);
-  }
-  return res;
+	double array[3],res = 0.0;
+	array[0] = l1;
+	array[1] = l2;
+	array[2] = fsky;
+	
+	if (sqrt(l1*l2) >= 1.e+1){
+		res =int_GSL_integrate_crude(int_for_HSV,(void*)array,1./(1.0+redshiftshear.zdistrpar_zmax),0.99,NULL,1000);
+	}
+	return res;
 }
 
 /******* trispectrum terms for covariance (parallelogram) configurations *******/
@@ -1116,7 +968,7 @@ double project_tri_1h_cov(double l1,double l2,int alpha){
   static double ds = .0, logsmin = .0, logsmax = .0;
   int i,j;
   double res,as,val,slog1,slog2;
-  if (INDEX_ALPHA != alpha)
+  if (INDEX_ALPHA != alpha )
   {
     if (table!=0) sm2_free_matrix(table,0, table_N_halo_s-1, 0, table_N_halo_s-1);     
     table = sm2_matrix(0, table_N_halo_s-1, 0, table_N_halo_s-1); 
@@ -1155,7 +1007,7 @@ double project_tri_lin_cov(double l1,double l2,int alpha){
   static double ds = .0, logsmin = .0, logsmax = .0;
   int i,j;
   double res,as,val,slog1,slog2;
-  if (INDEX_ALPHA != alpha)
+  if (INDEX_ALPHA != alpha )
   {
     if (table!=0) sm2_free_matrix(table,0, table_N_halo_s-1, 0, table_N_halo_s-1);     
     table = sm2_matrix(0, table_N_halo_s-1, 0, table_N_halo_s-1); 
@@ -1180,7 +1032,204 @@ double project_tri_lin_cov(double l1,double l2,int alpha){
 	//printf("%le %le %le\n",array[0],array[1],res);
       }
     }
-  INDEX_ALPHA=alpha;
+  INDEX_ALPHA=alpha;   
+  }
+  slog1=log(l1);
+  slog2=log(l2);
+  //printf("tri_lin_cov %.20le %.20le %d\n",l1,l2,alpha);
+  val = sm2_interpol2d_noextra(table, table_N_halo_s, logsmin, logsmax, ds, slog1, table_N_halo_s, logsmin, logsmax, ds, slog2,1.0,1.0);
+  // printf("tri_lin_cov %le\n",exp(val));
+ 
+  return exp(val);
+}
+
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// START TOMOGRAPHY ROUTINES
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double inner_project_tri_lin_cov_tomo(double a,void *params)
+{
+  double k1,k2,hoverh0,res,wa,weight1;
+  double *ar = (double *) params;
+  wa = chi(a);
+  k1 = ar[0]/wa;
+  k2 = ar[1]/wa;
+  const double m04 = tri_lin_cov(k1,k2,a);
+  hoverh0 = sqrt(cosmology.Omega_m /(a*a*a) + (1.-cosmology.Omega_m -cosmology.Omega_v )/(a*a) + omv_vareos(a) );
+  weight1 = g_source_tomo(a,(int) ar[2])*g_source_tomo(a, (int) ar[3])*g_source_tomo(a, (int) ar[4])*g_source_tomo(a, (int) ar[5])/a/a/a/a/a/a/hoverh0/wa/wa;
+  //printf("inner_project_tri_lin_cov_tomo %le %le %le %le %le\n",ar[2],ar[3],ar[4],ar[5]);
+  res = weight1*m04;
+  return res; 
+}
+
+double inner_project_tri_1h_cov_tomo(double a, void *params)
+{
+  double k1,k2,hoverh0,res,wa,weight1;
+  double *ar = (double *) params;
+  wa = chi(a);
+  k1 = ar[0]/wa;
+  k2 = ar[1]/wa;
+  const double m04 = tri_1h_cov(k1,k2,a);
+  hoverh0 = sqrt(cosmology.Omega_m /(a*a*a) + (1.-cosmology.Omega_m -cosmology.Omega_v )/(a*a) + omv_vareos(a) );
+  weight1 = g_source_tomo(a,(int) ar[2])*g_source_tomo(a, (int) ar[3])*g_source_tomo(a, (int) ar[4])*g_source_tomo(a, (int) ar[5])/a/a/a/a/a/a/hoverh0/wa/wa;
+  res = weight1*m04;
+  return res; 
+}
+
+double inner_project_tri_2h_cov_tomo(double a,void *params)
+{
+  double k1,k2,hoverh0,res,wa,weight1;
+  double *ar = (double *) params;
+  wa = chi(a);
+  k1 = ar[0]/wa;
+  k2 = ar[1]/wa;
+  const double m04 = tri_2h_cov(k1,k2,a);
+  hoverh0 = sqrt(cosmology.Omega_m /(a*a*a) + (1.-cosmology.Omega_m -cosmology.Omega_v )/(a*a) + omv_vareos(a) );
+  weight1 = g_source_tomo(a,(int) ar[2])*g_source_tomo(a, (int) ar[3])*g_source_tomo(a, (int) ar[4])*g_source_tomo(a, (int) ar[5])/a/a/a/a/a/a/hoverh0/wa/wa;
+  res = weight1*m04;
+  return res; 
+}
+
+double project_tri_2h_cov_tomo(double l1,double l2, int z1, int z2, int z3, int z4){
+  static int Z1 = -42;
+  static int Z2 = -42;
+  static int Z3 = -42;
+  static int Z4 = -42;
+  static double **table=0;
+  static double ds = .0, logsmin = .0, logsmax = .0;
+  int i,j;
+  double res,as,val,slog1,slog2;
+  
+  if (Z1!=z1 || Z2!=z2 || Z3!=z3 || Z4!=z4 )
+  {
+    if (table!=0) sm2_free_matrix(table,0, table_N_halo_s-1, 0, table_N_halo_s-1);     
+    table = sm2_matrix(0, table_N_halo_s-1, 0, table_N_halo_s-1); 
+    double array[6];
+    logsmin = log(limits.halo_s_min);
+    logsmax = log(limits.halo_s_max);
+    ds = (logsmax - logsmin)/(table_N_halo_s - 1.);
+    slog1 = logsmin;
+    as = 1./(redshiftshear.zdistrpar_zmax +1.);
+    array[2] = (double) z1;
+    array[3] = (double) z2;
+    array[4] = (double) z3;
+    array[5] = (double) z4;
+        
+    for (i=0; i<table_N_halo_s; i++, slog1+=ds) {  
+      array[0] = exp(slog1);
+      slog2 = slog1;
+      for (j=i; j<table_N_halo_s; j++, slog2+=ds) {  
+	array[1] = exp(slog2);
+	//printf("test %le %le\n",l1,l2);
+	res =int_GSL_integrate_crude(inner_project_tri_2h_cov_tomo,(void*)array,as,0.999999,NULL,1000);
+	table[i][j]=log(res);
+	table[j][i]=log(res);
+//	printf("%le %le %le\n",array[0],array[1],res);
+
+	}
+    }
+  Z1=z1;
+  Z2=z2;
+  Z3=z3;
+  Z4=z4;
+  }
+  slog1=log(l1);
+  slog2=log(l2);
+//  printf("tri_2h_cov %le %le\n",l1,l2);
+  val = sm2_interpol2d_noextra(table, table_N_halo_s, logsmin, logsmax, ds, slog1, table_N_halo_s, logsmin, logsmax, ds, slog2, 1.0,1.0);
+  return exp(val);
+}
+
+
+double project_tri_1h_cov_tomo(double l1,double l2, int z1, int z2, int z3, int z4){
+  static int Z1 = -42;
+  static int Z2 = -42;
+  static int Z3 = -42;
+  static int Z4 = -42;
+  static double **table=0;
+  static double ds = .0, logsmin = .0, logsmax = .0;
+  int i,j;
+  double res,as,val,slog1,slog2;
+  if (Z1!=z1 || Z2!=z2 || Z3!=z3 || Z4!=z4 )
+  {
+    if (table!=0) sm2_free_matrix(table,0, table_N_halo_s-1, 0, table_N_halo_s-1);     
+    table = sm2_matrix(0, table_N_halo_s-1, 0, table_N_halo_s-1); 
+    double array[6];
+    logsmin = log(limits.halo_s_min);
+    logsmax = log(limits.halo_s_max);
+    ds = (logsmax - logsmin)/(table_N_halo_s - 1.);
+    slog1 = logsmin;
+    as = 1./(redshiftshear.zdistrpar_zmax +1.);
+    array[2] = (double) z1;
+    array[3] = (double) z2;
+    array[4] = (double) z3;
+    array[5] = (double) z4;
+    for (i=0; i<table_N_halo_s; i++, slog1+=ds) {  
+      array[0] = exp(slog1);
+      slog2 = slog1;
+      for (j=i; j<table_N_halo_s; j++, slog2+=ds) {  
+	array[1] = exp(slog2);
+	res =int_GSL_integrate_crude(inner_project_tri_1h_cov_tomo,(void*)array,as,0.999999,NULL,1000);
+	table[i][j]=log(res);
+	table[j][i]=log(res);
+	//printf("%le %le %le\n",array[0],array[1],res);
+	}
+    }
+  Z1=z1;
+  Z2=z2;
+  Z3=z3;
+  Z4=z4;
+  }
+  slog1=log(l1);
+  slog2=log(l2);
+  //printf("tri_1h_cov %le %le\n",l1,l2);
+  val = sm2_interpol2d_noextra(table, table_N_halo_s, logsmin, logsmax, ds, slog1, table_N_halo_s, logsmin, logsmax, ds, slog2, 1.0,1.0);
+  return exp(val);
+}
+
+
+double project_tri_lin_cov_tomo(double l1,double l2, int z1, int z2, int z3, int z4){
+  static int Z1 = -42;
+  static int Z2 = -42;
+  static int Z3 = -42;
+  static int Z4 = -42;
+  static double **table=0;
+  static double ds = .0, logsmin = .0, logsmax = .0;
+  int i,j;
+  double res,as,val,slog1,slog2;
+  if (Z1!=z1 || Z2!=z2 || Z3!=z3 || Z4!=z4 )
+  {
+    if (table!=0) sm2_free_matrix(table,0, table_N_halo_s-1, 0, table_N_halo_s-1);     
+    table = sm2_matrix(0, table_N_halo_s-1, 0, table_N_halo_s-1); 
+    double array[6];
+    //printf("tri_lin_cov %d\n",alpha);
+
+    logsmin = log(limits.halo_s_min);
+    logsmax = log(limits.halo_s_max);
+    ds = (logsmax - logsmin)/(table_N_halo_s - 1.);
+    slog1 = logsmin;
+    as = 1./(redshiftshear.zdistrpar_zmax +1.);
+    array[2] = (double) z1;
+    array[3] = (double) z2;
+    array[4] = (double) z3;
+    array[5] = (double) z4;
+    for (i=0; i<table_N_halo_s; i++, slog1+=ds) {  
+      array[0] = exp(slog1);
+      slog2 = slog1;
+      for (j=i; j<table_N_halo_s; j++, slog2+=ds) {  
+	array[1] = exp(slog2);
+	//printf("test %le %le %d %d %d %d\n",exp(slog1),exp(slog2),table_N_halo_s,z2,z3,z4);
+	res =int_GSL_integrate_crude(inner_project_tri_lin_cov_tomo,(void*)array,as,0.999999,NULL,1000);
+	table[i][j]=log(res);
+	table[j][i]=log(res);
+	//printf("%le %le %le\n",array[0],array[1],res);
+      }
+    }
+  Z1=z1;
+  Z2=z2;
+  Z3=z3;
+  Z4=z4;
   }
   slog1=log(l1);
   slog2=log(l2);
@@ -1193,6 +1242,28 @@ double project_tri_lin_cov(double l1,double l2,int alpha){
 
 
 
+double int_for_HSV_tomo(double a, void *params){
+	double *ar = (double *) params;
+	double hoverh0,weight,wa,res;
+	wa=chi(a);
+	weight = pow(3./2.*cosmology.Omega_m/a,4.0)*g_source_tomo(a,(int) ar[3])*g_source_tomo(a, (int) ar[4])*g_source_tomo(a, (int) ar[5])*g_source_tomo(a, (int) ar[6]);
 
+	hoverh0 = sqrt(cosmology.Omega_m /(a*a*a) + (1.-cosmology.Omega_m -cosmology.Omega_v )/(a*a) + omv_vareos(a) );
+	res= weight/(hoverh0*a*a);//a^-2 from change of integration variable dchi -> da
+	return res*bI02(ar[0]/wa,a)*bI02(ar[1]/wa,a)*survey_variance(a,ar[2]);
+}
 
-
+double HSV_cov_tomo(double l1, double l2, double fsky, int z1, int z2, int z3, int z4){
+	double array[7],res = 0.0;
+	array[0] = l1;
+	array[1] = l2;
+	array[2] = fsky;
+	array[3] = (double) z1;
+	array[4] = (double) z2;
+	array[5] = (double) z3;
+	array[6] = (double) z4;
+	if (sqrt(l1*l2) >= 1.e+1){
+		res =int_GSL_integrate_crude(int_for_HSV_tomo,(void*)array,1./(1.0+redshiftshear.zdistrpar_zmax),0.999999,NULL,1000);
+	}
+	return res;
+}

@@ -89,8 +89,7 @@ ode_growth (double a, const double y[], double f[], void *params)
     return GSL_SUCCESS;
 }
 
-int
-jac_growth (double a, const double y[], double *dfdy, 
+int jac_growth (double a, const double y[], double *dfdy, 
      double dfdt[], void *params)
 {
     return GSL_SUCCESS;
@@ -124,10 +123,7 @@ double growth(struct cosmo mycosmo, double a){
     int status;
     
     while (t < t1){
-      status = gsl_odeiv_evolve_apply (e, c, s,
-					   &sys, 
-					   &t, t1,
-					   &h, y);
+      status = gsl_odeiv_evolve_apply (e, c, s, &sys, &t, t1, &h, y);
       if  (h>0.001)
 	h=0.001;
       
@@ -199,7 +195,7 @@ double solvehh(double dLS,struct cosmo mycosmo){
   */
   struct cosmo hmin = mycosmo;
   hmin.hub = 0.3;
-  // printf("min_cosmo: %g %g %g %g %g\n",hmin.hub,hmin.w0,hmin.wa,hmin.wm,hmin.wb);
+  //printf("min_cosmo: %g %g %g %g %g\n",hmin.hub,hmin.w0,hmin.wa,hmin.wm,hmin.wb);
   double ymin = distls(hmin)-dLS;
   //  printf("ymin: %g\n",ymin);
   struct cosmo hmax = mycosmo;

@@ -13,7 +13,7 @@ typedef struct {
   double sglob;
   double aglob;
   double rglob;
-  
+  int reset_cov_tables;
 }globalpara;
 
 typedef struct {
@@ -27,8 +27,9 @@ typedef struct {
 
 typedef struct {
   int Nbin;
-  double zmax[5];
-  double zmin[5];
+  int Npowerspectra;
+  double zmax[10];
+  double zmin[10];
 }sheartomopara;
 
 typedef struct {
@@ -80,6 +81,7 @@ void set_cosmological_parameters_to_WMAP_7years_only();
 void set_cosmological_parameters_to_DES_mocks();
 void set_cosmological_parameters_to_tak();
 void set_cosmological_parameters_to_SATO();
+void set_cosmological_parameters_to_OWLS();
 void set_cosmological_parameters_to_Great10();
 void set_redshift_DES();
 void set_redshift_DES_conti();
