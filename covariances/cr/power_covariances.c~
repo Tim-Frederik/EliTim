@@ -484,9 +484,9 @@ void make_cov_power_no_tomo(char *OUT_FILE,char *PATH,char *PARA_FILE,int N_para
 	    thsv[0]=HSV_cov(ell[i],ell[j],fsky);
 	  }
 	  if (calc[13]==1){
-	    tl[1]=project_tri_lin_cov(ell[i],ell[j],0); //csppp
-	    th1[1]=project_tri_1h_cov(ell[i],ell[j],0);
-	    th2[1]=project_tri_2h_cov(ell[i],ell[j],0);
+	    tl[1]=project_tri_lin_cov(ell[i],ell[j],1); //csppp
+	    th1[1]=project_tri_1h_cov(ell[i],ell[j],1);
+	    th2[1]=project_tri_2h_cov(ell[i],ell[j],1);
 	    thsv[1]=HSV_cov(ell[i],ell[j],fsky);
 	  }
 	  for(l=0; l<21; l++){
@@ -655,7 +655,7 @@ void set_cosmology(int set_cosmo)
 }
 
 
-void write_parameters(char *PARA_FILE, char*PATH, char *OUT_FILE,int N_para,int START,int END,int shear_shear,int mag_mag,int pos_pos,int shear_mag,int shear_pos,int mag_pos,int Ncl, double lmax, double lmin, int set_redshift,int NonGauss)
+void write_parameters(char *PARA_FILE, char*PATH, char *OUT_FILE,int N_para,int START,int END,int shear_shear,int mag_mag,int pos_pos,int shear_mag,int shear_pos,int mag_pos,int Ncl, double lmax, double lmin,int NonGauss)
 {
   printf("---------------------------------------\n");
   printf("---------RUN MODE PARAMETERS-----------\n");
