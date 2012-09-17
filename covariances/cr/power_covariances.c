@@ -27,9 +27,9 @@ extern con constants;
 extern pre precision;
 extern lim limits;
 extern cosmopara cosmology;
-extern sheartomopara sheartomo;
+extern tomopara tomo;
 extern configpara configuration;
-extern redshiftshearpara redshiftshear;
+extern redshiftpara redshift;
 extern globalpara global;
 extern nuisancepara nuisance;
 extern sur survey;
@@ -138,7 +138,7 @@ void pseudo_inverse(gsl_matrix *cov, gsl_matrix *invcov,int zero,int Nmatrix)
 }
 
 
-void read_write_cov_NonGauss(char *INFILE,int Ncl,int Ntomo)
+void read_write_cov_NonGauss(char *INFILE,int Ncl)
 {
   double space,space1,ell1,ell2;
   int Nmatrix,k,i,j,l,m,p,q,intspace;
@@ -151,11 +151,11 @@ void read_write_cov_NonGauss(char *INFILE,int Ncl,int Ntomo)
   sprintf(filename,"%s_easy_read",INFILE);
   printf("%s\n",filename);
   F2=fopen(filename,"w");
-  Nmatrix=Ncl*Ntomo;
+  Nmatrix=Ncl*tomo.shear_Npowerspectra;
   gsl_matrix *cov=gsl_matrix_calloc(Nmatrix,Nmatrix);
   k=0;
-  for (i=0;i<Ntomo; i++){
-    for (j=i;j<Ntomo; j++){
+  for (i=0;i<tomo.shear_Npowerspectra; i++){
+    for (j=i;j<tomo.shear_Npowerspectra; j++){
       for (p=0;p<Ncl; p++){
 	for (q=p;q<Ncl; q++,k++){
 	  fscanf(F,"%d %d %d %d %le %le %le %le %le %le %le %le\n",&intspace,&intspace,&intspace,&intspace,&ell1,&ell2,&space,&space,&space,&space,&space,&space1);
@@ -170,8 +170,8 @@ void read_write_cov_NonGauss(char *INFILE,int Ncl,int Ntomo)
   }
   printf("%d\n",k);
   fclose(F);
-  for (l=0;l<Ntomo;l++){
-    for (m=0;m<Ntomo;m++){
+  for (l=0;l<tomo.shear_Npowerspectra;l++){
+    for (m=0;m<tomo.shear_Npowerspectra;m++){
       for (p=0;p<Ncl; p++){
 	for (q=0;q<Ncl; q++){
 	  fprintf(F2,"%d %d %d %d %le\n",l,m,p,q,gsl_matrix_get(cov,l*Ncl+p,m*Ncl+q));
@@ -182,9 +182,9 @@ void read_write_cov_NonGauss(char *INFILE,int Ncl,int Ntomo)
   fclose(F2);
 }
 
-void read_write_cov_Gauss(char *INFILE, int Ncl, int Ntomo)
+void read_write_cov_Gauss(char *INFILE, int Ncl)
 {
-  double space,space1,ell1,ell2;
+  double space1,ell1,ell2;
   int Nmatrix,i,j,l,m,p,q,intspace;
   FILE *F,*F2;
   char filename[600];
@@ -195,11 +195,11 @@ void read_write_cov_Gauss(char *INFILE, int Ncl, int Ntomo)
   sprintf(filename,"%s_easy_read",INFILE);
   printf("%s\n",filename);
   F2=fopen(filename,"w");
-  Nmatrix=Ncl*Ntomo;
+  Nmatrix=Ncl*tomo.shear_Npowerspectra;
   gsl_matrix *cov=gsl_matrix_calloc(Nmatrix,Nmatrix);
   
-  for (i=0;i<Ntomo; i++){
-    for (j=i;j<Ntomo; j++){
+  for (i=0;i<tomo.shear_Npowerspectra; i++){
+    for (j=i;j<tomo.shear_Npowerspectra; j++){
       for (p=0;p<Ncl; p++){
 	for (q=p;q<Ncl; q++){
 	  space1=0.0;
@@ -218,8 +218,8 @@ void read_write_cov_Gauss(char *INFILE, int Ncl, int Ntomo)
   }
   fclose(F);
   
-  for (l=0;l<Ntomo;l++){
-    for (m=0;m<Ntomo;m++){
+  for (l=0;l<tomo.shear_Npowerspectra;l++){
+    for (m=0;m<tomo.shear_Npowerspectra;m++){
       for (p=0;p<Ncl; p++){
 	for (q=0;q<Ncl; q++){
 	  fprintf(F2,"%d %d %d %d %le\n",l,m,p,q,gsl_matrix_get(cov,l*Ncl+p,m*Ncl+q));
@@ -231,7 +231,7 @@ void read_write_cov_Gauss(char *INFILE, int Ncl, int Ntomo)
 }
 
 
-void invcov_CL_tomo(char *INFILE, int cut_min, int cut_max,int Ncl,int Ntomo) 
+void invcov_CL_tomo(char *INFILE, int cut_min, int cut_max,int Ncl) 
 {    
   double space1;
   int Nmatrix,i,j,l,m,p,q,intspace1,intspace2,intspace3,intspace4;
@@ -243,11 +243,11 @@ void invcov_CL_tomo(char *INFILE, int cut_min, int cut_max,int Ncl,int Ntomo)
   //printf("%s\n",filename);
   F=fopen(filename,"r");
   int reduce=cut_max+cut_min;
-  Nmatrix=(Ncl-reduce)*Ntomo;
+  Nmatrix=(Ncl-reduce)*tomo.shear_Npowerspectra;
   gsl_matrix *cov=gsl_matrix_calloc(Nmatrix,Nmatrix);
   
-  for (i=0;i<Ntomo; i++){
-    for (p=0;p<Ntomo; p++){
+  for (i=0;i<tomo.shear_Npowerspectra; i++){
+    for (p=0;p<tomo.shear_Npowerspectra; p++){
       for (j=0;j<Ncl; j++){
 	for (q=0;q<Ncl; q++){
 	  fscanf(F,"%d %d %d %d %le\n",&intspace1,&intspace2,&intspace3,&intspace4,&space1);
@@ -265,7 +265,7 @@ void invcov_CL_tomo(char *INFILE, int cut_min, int cut_max,int Ncl,int Ntomo)
   gsl_matrix_memcpy(cop,cov);
   eigen_sing(cop,eigen,sing,Nmatrix);
   
-  for (i=0;i<Ntomo*(Ncl-reduce); i++){
+  for (i=0;i<tomo.shear_Npowerspectra*(Ncl-reduce); i++){
     //printf("%d %le %le\n",i,gsl_vector_get(eigen,i),gsl_vector_get(sing,i));
     if(gsl_vector_get(eigen,i)<0.0) {
       printf("COV %dth EV=%le\n",i,gsl_vector_get(eigen,i));
@@ -280,7 +280,7 @@ void invcov_CL_tomo(char *INFILE, int cut_min, int cut_max,int Ncl,int Ntomo)
   SVD_inversion(cov,inverseSVD,Nmatrix);	
   gsl_matrix_memcpy(cop,inverseSVD);
   eigen_sing(cop,eigen2,sing2,Nmatrix);
-  for (i=0;i<Ntomo*(Ncl-reduce); i++){
+  for (i=0;i<tomo.shear_Npowerspectra*(Ncl-reduce); i++){
     //printf("%d %le %le\n",i,gsl_vector_get(eigen,i),gsl_vector_get(sing,i));
     if(gsl_vector_get(eigen2,i)<0.0){
       printf("INV %dth EV=%le\n",i,gsl_vector_get(eigen,i));
@@ -515,7 +515,7 @@ void make_cov_power_no_tomo(char *OUT_FILE,char *PATH,char *PARA_FILE,int N_para
 
 
 
-void make_cov_power_tomo(char *OUT_FILE,char *PATH, char *PARA_FILE,int N_para,int START,int END,int set_cosmo, double *ell,double *dell,int Ncl,int Ntomo,int *calc, int NonGauss)
+void make_cov_power_tomo(char *OUT_FILE,char *PATH, char *PARA_FILE,int N_para,int START,int END,int set_cosmo, double *ell,double *dell,int Ncl,int *calc, int NonGauss)
 {
   char filename[400];
   double prefac,A,ngal,noise_ss,fsky,prefac3,prefac2,tl,th1,th2,thsv,a,gauss;
@@ -541,7 +541,7 @@ void make_cov_power_tomo(char *OUT_FILE,char *PATH, char *PARA_FILE,int N_para,i
   
   A=survey.area*survey.area_conversion_factor;
   ngal=survey.n_gal*survey.n_gal_conversion_factor;
-  ngal=ngal/sheartomo.Nbin; 
+  ngal=ngal/tomo.shear_Nbin; 
   noise_ss= survey.sigma_e*survey.sigma_e/2.0/ngal;
   
   fsky = survey.area/41253.0;
@@ -571,10 +571,10 @@ void make_cov_power_tomo(char *OUT_FILE,char *PATH, char *PARA_FILE,int N_para,i
       F1=fopen(filename,"w");
     }
     
-    for (l=0;l<sheartomo.Nbin; l++){
-      for (m=l;m<sheartomo.Nbin;m++){
-	for (n=l;n<sheartomo.Nbin; n++){
-	  for (o=n;o<sheartomo.Nbin; o++){
+    for (l=0;l<tomo.shear_Nbin; l++){
+      for (m=l;m<tomo.shear_Nbin;m++){
+	for (n=l;n<tomo.shear_Nbin; n++){
+	  for (o=n;o<tomo.shear_Nbin; o++){
 	    if((o>=m)|| (n>l) ){  //both important 1)otherwise lower triangular matrix is sampled 2) otherwise e.g. 15 23 is excluded
 	     i1=indexcalc(l,n);
 	     i2=indexcalc(m,o);
@@ -609,11 +609,11 @@ void make_cov_power_tomo(char *OUT_FILE,char *PATH, char *PARA_FILE,int N_para,i
 		   array[3] = (double) m;
 		   array[4] = (double) n;
 		   array[5] = (double) o;
-		   tl = pow(prefac3,4.0)*int_GSL_integrate_crude(inner_project_tri_lin_cov_tomo,(void*)array,1./(redshiftshear.zdistrpar_zmax +1.),0.999999,NULL,1000)/(2.0*constants.twopi*fsky);
+		   tl = pow(prefac3,4.0)*int_GSL_integrate_crude(inner_project_tri_lin_cov_tomo,(void*)array,1./(redshift.shear_zdistrpar_zmax +1.),0.999999,NULL,1000)/(2.0*constants.twopi*fsky);
 		   //printf("tl %le\n",tl);
-		   th1 = pow(prefac3,4.0)*int_GSL_integrate_crude(inner_project_tri_1h_cov_tomo,(void*)array,1./(redshiftshear.zdistrpar_zmax +1.),0.999999,NULL,1000)/(2.0*constants.twopi*fsky);
+		   th1 = pow(prefac3,4.0)*int_GSL_integrate_crude(inner_project_tri_1h_cov_tomo,(void*)array,1./(redshift.shear_zdistrpar_zmax +1.),0.999999,NULL,1000)/(2.0*constants.twopi*fsky);
 		   //printf("th1 %le\n",th1);
-		   th2 = pow(prefac3,4.0)*int_GSL_integrate_crude(inner_project_tri_2h_cov_tomo,(void*)array,1./(redshiftshear.zdistrpar_zmax +1.),0.999999,NULL,1000)/(2.0*constants.twopi*fsky);
+		   th2 = pow(prefac3,4.0)*int_GSL_integrate_crude(inner_project_tri_2h_cov_tomo,(void*)array,1./(redshift.shear_zdistrpar_zmax +1.),0.999999,NULL,1000)/(2.0*constants.twopi*fsky);
 		   //printf("th2 %le\n",th2);
 		   thsv=HSV_cov_tomo(ell[i],ell[j],fsky,l,m,n,o);
 		   fprintf(F1,"%d %d %d %d %le %le %le %le %le %le %le %le\n",l+1,m+1,n+1,o+1,ell[i],ell[j],a,tl,th1,th2,thsv,a+tl+th1+th2+thsv);
@@ -627,9 +627,9 @@ void make_cov_power_tomo(char *OUT_FILE,char *PATH, char *PARA_FILE,int N_para,i
       }
     }
     fclose(F1);
-    if (NonGauss==1)read_write_cov_NonGauss(filename,Ncl,Ntomo);
-    if(NonGauss==0) read_write_cov_Gauss(filename,Ncl,Ntomo);
-    invcov_CL_tomo(filename,0,0,Ncl,Ntomo); 
+    if (NonGauss==1)read_write_cov_NonGauss(filename,Ncl);
+    if(NonGauss==0) read_write_cov_Gauss(filename,Ncl);
+    invcov_CL_tomo(filename,0,0,Ncl); 
   }  
 }
 
@@ -655,23 +655,7 @@ void set_cosmology(int set_cosmo)
 }
 
 
-void set_redshift_distri(int set_redshift)
-{
-  if(set_redshift==1){
-    set_redshift_CFHTLS();
-  }
-  if(set_redshift==2){
-    set_redshift_SATO();
-  }
-  if(set_redshift==3){
-    set_redshift_DES_conti(); //CFHTLS like but mean redshift =0.75 
-  }
-  if(set_redshift==4){
-    set_redshift_SDSS(); //CFHTLS like but mean redshift =0.75 
-  }
-}
-
-void write_parameters(char *PARA_FILE, char*PATH, char *OUT_FILE,int N_para,int START,int END,int shear_shear,int mag_mag,int pos_pos,int shear_mag,int shear_pos,int mag_pos,int Ncl, double lmax, double lmin, int set_redshift,int NonGauss)
+void write_parameters(char *PARA_FILE, char*PATH, char *OUT_FILE,int N_para,int START,int END,int shear_shear,int mag_mag,int pos_pos,int shear_mag,int shear_pos,int mag_pos,int Ncl, double lmax, double lmin,int NonGauss)
 {
   printf("---------------------------------------\n");
   printf("---------RUN MODE PARAMETERS-----------\n");
@@ -704,27 +688,27 @@ void write_parameters(char *PARA_FILE, char*PATH, char *OUT_FILE,int N_para,int 
   
   if(configuration.TOMOGRAPHY==0) {
     printf("Tomography: NO\n");
-    printf("z_min: %le\n",redshiftshear.zdistrpar_zmin);
-    printf("z_max: %le\n",redshiftshear.zdistrpar_zmax);
+    printf("z_min: %le\n",redshift.shear_zdistrpar_zmin);
+    printf("z_max: %le\n",redshift.shear_zdistrpar_zmax);
   }
   if(configuration.TOMOGRAPHY==1) {
-    printf("Tomography: YES %d z-bins %d power spectra\n",sheartomo.Nbin,sheartomo.Npowerspectra);
-    printf("z1: %le - %le\n",sheartomo.zmin[0],sheartomo.zmax[0]);
-    printf("z2: %le - %le\n",sheartomo.zmin[1],sheartomo.zmax[1]);
-    printf("z3: %le - %le\n",sheartomo.zmin[2],sheartomo.zmax[2]);
-    printf("z4: %le - %le\n",sheartomo.zmin[3],sheartomo.zmax[3]);
-    printf("z5: %le - %le\n",sheartomo.zmin[4],sheartomo.zmax[4]);
+    printf("Tomography: YES %d z-bins %d power spectra\n",tomo.shear_Nbin,tomo.shear_Npowerspectra);
+    printf("z1: %le - %le\n",tomo.shear_zmin[0],tomo.shear_zmax[0]);
+    printf("z2: %le - %le\n",tomo.shear_zmin[1],tomo.shear_zmax[1]);
+    printf("z3: %le - %le\n",tomo.shear_zmin[2],tomo.shear_zmax[2]);
+    printf("z4: %le - %le\n",tomo.shear_zmin[3],tomo.shear_zmax[3]);
+    printf("z5: %le - %le\n",tomo.shear_zmin[4],tomo.shear_zmax[4]);
   }
   
-  if(redshiftshear.histogram_zbins==0){ 
+  if(redshift.shear_histogram_zbins==0){ 
     printf("Using Redshift Parametrization\n");
-    printf("shear z0=%le\n",redshiftshear.z0);
-    printf("shear beta: %le\n",redshiftshear.beta_p);
-    printf("shear alpha: %le\n", redshiftshear.alpha);
+    printf("shear z0=%le\n",redshift.shear_z0);
+    printf("shear beta: %le\n",redshift.shear_beta_p);
+    printf("shear alpha: %le\n", redshift.shear_alpha);
   }
-  if(redshiftshear.histogram_zbins!=0){ 
-    printf("USING SHEAR REDSHIFT_FILE: %s\n",redshiftshear.REDSHIFT_FILE);
-    printf("N_bins in dn/dz: %d\n",redshiftshear.histogram_zbins);
+  if(redshift.shear_histogram_zbins!=0){ 
+    printf("USING SHEAR REDSHIFT_FILE: %s\n",redshift.shear_REDSHIFT_FILE);
+    printf("N_bins in dn/dz: %d\n",redshift.shear_histogram_zbins);
   }
 }    
 
@@ -766,37 +750,58 @@ int main(int argc, char** argv)
   survey.sigma_e=atof(argv[21]);
   
   
-  // REDSHIFT setup1
-  int set_redshift=atoi(argv[22]);
-  set_redshift_distri(set_redshift); //must be set to initialize non-single plane mode
-  redshiftshear.zdistrpar_zmin=atof(argv[23]);
-  redshiftshear.zdistrpar_zmax=atof(argv[24]);
-  redshiftshear.histogram_zbins=atoi(argv[25]);
-  sprintf(redshiftshear.REDSHIFT_FILE,"%s",argv[26]);
+  // REDSHIFT setup
+  redshift.shear_photoz=atoi(argv[22]);
+  redshift.shear_zdistrpar_zmin=atof(argv[23]);
+  redshift.shear_zdistrpar_zmax=atof(argv[24]);
+  redshift.shear_histogram_zbins=atoi(argv[25]);
+  sprintf(redshift.shear_REDSHIFT_FILE,"%s",argv[26]);
   
-  configuration.TOMOGRAPHY=atoi(argv[27]); 
-  int NonGauss=atoi(argv[28]);
+  redshift.shear_z0=atof(argv[27]); 
+  redshift.shear_alpha=atof(argv[28]); 
+  redshift.shear_beta_p=atof(argv[29]); 
+  
+  redshift.clustering_photoz=atoi(argv[30]);
+  redshift.clustering_zdistrpar_zmin=atof(argv[31]);
+  redshift.clustering_zdistrpar_zmax=atof(argv[32]);
+  redshift.clustering_histogram_zbins=atoi(argv[33]);
+  sprintf(redshift.clustering_REDSHIFT_FILE,"%s",argv[34]);
+  
+  redshift.clustering_z0=atof(argv[35]); 
+  redshift.clustering_alpha=atof(argv[36]); 
+  redshift.clustering_beta_p=atof(argv[37]); 
+ 
+  
+  configuration.TOMOGRAPHY=atoi(argv[38]); 
+  int NonGauss=atoi(argv[39]);
   if(configuration.TOMOGRAPHY==1){
-    sheartomo.Nbin=atoi(argv[29]);
-    if (sheartomo.Nbin>10){ 
-      printf("ERROR: 10 tomography bins MAX!");
+    tomo.shear_Nbin=atoi(argv[40]);
+    if (tomo.shear_Nbin>10){ 
+      printf("ERROR: 10 shear tomography bins MAX!");
     }
-    for (i=0;i<sheartomo.Nbin; i++){
-      sheartomo.Npowerspectra=sheartomo.Npowerspectra+i+1;
+    for (i=0;i<tomo.shear_Nbin; i++){
+      tomo.shear_Npowerspectra=tomo.shear_Npowerspectra+i+1;
     }
-    for (i=0;i<sheartomo.Nbin; i++){
-      sheartomo.zmin[i]=atof(argv[30+i]);
-      sheartomo.zmax[i]=atof(argv[31+i]);
-      //     printf("%le %le\n",sheartomo.zmax[i],sheartomo.zmin[i]);
+    for (i=0;i<tomo.shear_Nbin; i++){
+      tomo.shear_zmin[i]=atof(argv[41+i]);
+      tomo.shear_zmax[i]=atof(argv[42+i]);
+      //     printf("%le %le\n",tomo.shear_zmax[i],tomo.shear_zmin[i]);
     }
-    k=0;
-    for (i=0;i<sheartomo.Nbin; i++){
-      for (j=i;j<sheartomo.Nbin; j++,k++){
-      }
+    tomo.clustering_Nbin=atoi(argv[42+tomo.shear_Nbin]);
+    if (tomo.clustering_Nbin>10){ 
+      printf("ERROR: 10 clustering tomography bins MAX!");
+    }
+    for (i=0;i<tomo.clustering_Nbin; i++){
+      tomo.clustering_Npowerspectra=tomo.clustering_Npowerspectra+i+1;
+    }
+    for (i=0;i<tomo.clustering_Nbin; i++){
+      tomo.clustering_zmin[i]=atof(argv[43+tomo.shear_Nbin+i]);
+      tomo.clustering_zmax[i]=atof(argv[44+tomo.shear_Nbin+i]);
+      //     printf("%le %le\n",tomo.clusteringzmax[i],tomo.clusteringzmin[i]);
     }
   }
-  int Ntomo=k;
-  write_parameters(PARAFILE,PATH,OUTFILE,N_para,START,END,shear_shear,mag_mag,pos_pos,shear_mag,shear_pos,mag_pos,Ncl,lmax,lmin,set_redshift,NonGauss);
+   
+  write_parameters(PARAFILE,PATH,OUTFILE,N_para,START,END,shear_shear,mag_mag,pos_pos,shear_mag,shear_pos,mag_pos,Ncl,lmax,lmin,NonGauss);
   
   //binning  calculation
   //  printf("%le %le\n",lmin,lmax);
@@ -818,13 +823,12 @@ int main(int argc, char** argv)
     }    
   }
   
-  
-  //Start of routines
+   //Start of routines
   if((configuration.TOMOGRAPHY==0)){ make_cov_power_no_tomo(OUTFILE,PATH,PARAFILE,N_para,START,END,set_cosmo,ell,dell,Ncl,calc,NonGauss);
   //name, min, max
   
   }
-  if((configuration.TOMOGRAPHY==1)){ make_cov_power_tomo(OUTFILE,PATH,PARAFILE,N_para,START,END,set_cosmo,ell,dell,Ncl,Ntomo,calc,NonGauss);
+  if((configuration.TOMOGRAPHY==1)){ make_cov_power_tomo(OUTFILE,PATH,PARAFILE,N_para,START,END,set_cosmo,ell,dell,Ncl,calc,NonGauss);
   }
   
   return 0;

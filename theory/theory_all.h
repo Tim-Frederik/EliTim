@@ -7,6 +7,11 @@
 #define table_N_k     1000
 #define table_N_s    200
 #define table_N_klin 200
+
+
+#define table_N_zp 100
+#define table_N_zs 100
+
 #define table_N_thetaH 2048
 #define table_N_S2    1000
 #define table_N_BN    100

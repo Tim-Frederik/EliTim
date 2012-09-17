@@ -10,7 +10,7 @@
 ##################################################
 PARA_FILE ../../../data/baryons/paralist_OWLS_fid	# File which contains the cosmological parameters for which the predictions are to be calculated
 PATH ../../../data/baryons/test/
-OUTPUT_FILE OWLS_cov
+OUTPUT_FILE OWLS_cov_22
 N_para    	1	# Number of cosmologies, i.e. length of PARA_FILE
 START 		0	# when splitting PARA_FILE, define starting point here
 END 		1	# when splitting PARA_FILE, define end point here
@@ -48,20 +48,44 @@ survey.sigma_e 0.32
 #########################################
 set_redshift_distri 5 # BCC-redshift
 
-redshiftshear.zdistrpar_zmin 0.11 
-redshiftshear.zdistrpar_zmax 1.99 # must be set for integral over P_delta 
-redshiftshear.histogram_zbins 95
-redshiftshear.REDSHIFT_FILE ../z_histo_bin95_larger_z01
+redshift.shear_photoz 0 # set 0 if using analytic formula
+redshift.shear_zdistrpar_zmin 0.11 
+redshift.shear_zdistrpar_zmax 1.99 # must be set for integral over P_delta 
+redshift.shear_histogram_zbins 95
+redshift.shear_REDSHIFT_FILE ../z_histo_bin95_larger_z01
+
+redshift.shear_z0 0.47
+redshift.shear_alpha 1.193
+redshift.shear_beta_p 1.197 # set to 0 when using single source plane
+
+redshift.clustering_photoz 0 # set 0 if using analytic formula
+redshift.clustering_zdistrpar_zmin 0.11 
+redshift.clustering_zdistrpar_zmax 1.99 # must be set for integral over P_delta 
+redshift.clustering_histogram_zbins 95
+redshift.clustering_REDSHIFT_FILE ../z_histo_bin95_larger_z01
+
+redshift.clustering_z0 0.47
+redshift.clustering_alpha 1.193
+redshift.clustering_beta_p 1.197 # set to 0 when using single source plane
+
 
 configuration.TOMOGRAPHY 1
 NonGauss 1
-sheartomo.Nbin 5
-sheartomo.zmin1 0.11     
-sheartomo.zmax1_zmin2 0.3325   
-sheartomo.zmax2_zmin3 0.5025
-sheartomo.zmax3_zmin4 0.6725
-sheartomo.zmax4_zmin5 0.8725
-sheartomo.zmax5 1.99
+tomo.shear_Nbin 5
+tomo.shear_zmin1 0.11     
+tomo.shear_zmax1_zmin2 0.3325   
+tomo.shear_zmax2_zmin3 0.5025
+tomo.shear_zmax3_zmin4 0.6725
+tomo.shear_zmax4_zmin5 0.8725
+tomo.shear_zmax5 1.99
+
+tomo.clustering_Nbin 5
+tomo.clustering_zmin1 0.11     
+tomo.clustering_zmax1_zmin2 0.3325   
+tomo.clustering_zmax2_zmin3 0.5025
+tomo.clustering_zmax3_zmin4 0.6725
+tomo.clustering_zmax4_zmin5 0.8725
+tomo.clustering_zmax5 1.99
 
 
 

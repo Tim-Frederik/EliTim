@@ -24,8 +24,7 @@ extern cosmopara cosmology;
 extern sur survey;
 extern con constants;
 extern lim limits;
-extern redshiftshearpara redshiftshear;
-extern redshiftclusteringpara redshiftclustering;
+extern redshiftpara redshift;
 extern globalpara global;
 
 
@@ -690,7 +689,7 @@ static double inner_project_tri_2h (double a,void *params)
 
 double project_tri_2h (double l1x,double l1y,double l2x,double l2y,double l3x,double l3y){
   double as, array[6],res;
-  as = 1./(redshiftshear.z0 +1.);
+  as = 1./(redshift.shear_z0 +1.);
   array[0] = l1x;
   array[1] = l1y;
   array[2] = l2x;
@@ -703,7 +702,7 @@ double project_tri_2h (double l1x,double l1y,double l2x,double l2y,double l3x,do
 
 double project_tri_1h (double l1x,double l1y,double l2x,double l2y,double l3x,double l3y){
   double as, array[6],res;
-  as = 1./(redshiftshear.z0 +1.);
+  as = 1./(redshift.shear_z0 +1.);
   array[0] = l1x;
   array[1] = l1y;
   array[2] = l2x;
@@ -715,7 +714,7 @@ double project_tri_1h (double l1x,double l1y,double l2x,double l2y,double l3x,do
 }
 double project_tri_lin (double l1x,double l1y,double l2x,double l2y,double l3x,double l3y){
   double as, array[6],res;
-  as = 1./(redshiftshear.z0 +1.);
+  as = 1./(redshift.shear_z0 +1.);
   array[0] = l1x;
   array[1] = l1y;
   array[2] = l2x;
@@ -820,7 +819,7 @@ double HSV_cov(double l1, double l2, double fsky){
 	array[2] = fsky;
 	
 	if (sqrt(l1*l2) >= 1.e+1){
-		res =int_GSL_integrate_crude(int_for_HSV,(void*)array,1./(1.0+redshiftshear.zdistrpar_zmax),0.99,NULL,1000);
+		res =int_GSL_integrate_crude(int_for_HSV,(void*)array,1./(1.0+redshift.shear_zdistrpar_zmax),0.99,NULL,1000);
 	}
 	return res;
 }
@@ -937,7 +936,7 @@ double project_tri_2h_cov(double l1,double l2,int alpha){
     logsmax = log(limits.halo_s_max);
     ds = (logsmax - logsmin)/(table_N_halo_s - 1.);
     slog1 = logsmin;
-    as = 1./(redshiftshear.zdistrpar_zmax +1.);
+    as = 1./(redshift.shear_zdistrpar_zmax +1.);
     array[2] = alpha*1.0;
     for (i=0; i<table_N_halo_s; i++, slog1+=ds) {  
       array[0] = exp(slog1);
@@ -978,7 +977,7 @@ double project_tri_1h_cov(double l1,double l2,int alpha){
     logsmax = log(limits.halo_s_max);
     ds = (logsmax - logsmin)/(table_N_halo_s - 1.);
     slog1 = logsmin;
-    as = 1./(redshiftshear.zdistrpar_zmax +1.);
+    as = 1./(redshift.shear_zdistrpar_zmax +1.);
     array[2] = alpha*1.0;
     for (i=0; i<table_N_halo_s; i++, slog1+=ds) {  
       array[0] = exp(slog1);
@@ -1018,7 +1017,7 @@ double project_tri_lin_cov(double l1,double l2,int alpha){
     logsmax = log(limits.halo_s_max);
     ds = (logsmax - logsmin)/(table_N_halo_s - 1.);
     slog1 = logsmin;
-    as = 1./(redshiftshear.zdistrpar_zmax +1.);
+    as = 1./(redshift.shear_zdistrpar_zmax +1.);
     array[2] = alpha*1.0;
     for (i=0; i<table_N_halo_s; i++, slog1+=ds) {  
       array[0] = exp(slog1);
@@ -1110,7 +1109,7 @@ double project_tri_2h_cov_tomo(double l1,double l2, int z1, int z2, int z3, int 
     logsmax = log(limits.halo_s_max);
     ds = (logsmax - logsmin)/(table_N_halo_s - 1.);
     slog1 = logsmin;
-    as = 1./(redshiftshear.zdistrpar_zmax +1.);
+    as = 1./(redshift.shear_zdistrpar_zmax +1.);
     array[2] = (double) z1;
     array[3] = (double) z2;
     array[4] = (double) z3;
@@ -1160,7 +1159,7 @@ double project_tri_1h_cov_tomo(double l1,double l2, int z1, int z2, int z3, int 
     logsmax = log(limits.halo_s_max);
     ds = (logsmax - logsmin)/(table_N_halo_s - 1.);
     slog1 = logsmin;
-    as = 1./(redshiftshear.zdistrpar_zmax +1.);
+    as = 1./(redshift.shear_zdistrpar_zmax +1.);
     array[2] = (double) z1;
     array[3] = (double) z2;
     array[4] = (double) z3;
@@ -1209,7 +1208,7 @@ double project_tri_lin_cov_tomo(double l1,double l2, int z1, int z2, int z3, int
     logsmax = log(limits.halo_s_max);
     ds = (logsmax - logsmin)/(table_N_halo_s - 1.);
     slog1 = logsmin;
-    as = 1./(redshiftshear.zdistrpar_zmax +1.);
+    as = 1./(redshift.shear_zdistrpar_zmax +1.);
     array[2] = (double) z1;
     array[3] = (double) z2;
     array[4] = (double) z3;
@@ -1263,7 +1262,7 @@ double HSV_cov_tomo(double l1, double l2, double fsky, int z1, int z2, int z3, i
 	array[5] = (double) z3;
 	array[6] = (double) z4;
 	if (sqrt(l1*l2) >= 1.e+1){
-		res =int_GSL_integrate_crude(int_for_HSV_tomo,(void*)array,1./(1.0+redshiftshear.zdistrpar_zmax),0.999999,NULL,1000);
+		res =int_GSL_integrate_crude(int_for_HSV_tomo,(void*)array,1./(1.0+redshift.shear_zdistrpar_zmax),0.999999,NULL,1000);
 	}
 	return res;
 }

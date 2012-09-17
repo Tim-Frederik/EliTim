@@ -33,8 +33,8 @@ extern pre precision;
 extern lim limits;
 extern cosmopara cosmology;
 extern configpara configuration;
-extern redshiftshearpara redshiftshear;
-extern redshiftclusteringpara redshiftclustering;
+extern redshiftpara redshift;
+extern tomopara tomo;
 extern globalpara global;
 extern nuisancepara nuisance;
 
@@ -209,7 +209,7 @@ double Tsqr_EH_wiggle(double kk)
   /* Finally, TFmdm_onek_mpc() and TFmdm_onek_hmpc() give their answers as */
   double  static tf_cb; 	/* The transfer function for density-weighted
   CDM + Baryon perturbations. */
-
+  
   
   if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || OMB !=cosmology.omb || H0 !=cosmology.h0)
   {
@@ -217,7 +217,7 @@ double Tsqr_EH_wiggle(double kk)
     OMEGA_V =cosmology.Omega_v;
     OMB=cosmology.omb;
     H0= cosmology.h0;
-  
+    
     
     /* -------------------------Beginning of Wayne Hu EH99 routine ------------------------ */
     /* -------------------------- TFmdm_set_cosm() ------------------------------------------------- */
@@ -245,11 +245,11 @@ double Tsqr_EH_wiggle(double kk)
     
     /* Compute the equality scale. */
     z_equality = 25000.0*omhh/SQR(SQR(theta_cmb));	/* Actually 1+z_eq */
-   
     
- //!!!!!!!! added this line as Transfer function is calculated at time of matter-rad equality
-double  redshift=z_equality;  
- //!!!!!!!!
+    
+    //!!!!!!!! added this line as Transfer function is calculated at time of matter-rad equality
+    double  redshift=z_equality;  
+    //!!!!!!!!
     /* Compute the drag epoch and sound horizon */
     z_drag_b1 = 0.313*pow(omhh,-0.419)*(1+0.607*pow(omhh,0.674));
     z_drag_b2 = 0.238*pow(omhh,0.223);
@@ -355,15 +355,15 @@ double Delta_L(double k)
   
   if (configuration.transferfunction_EH99==1){
     double kkorr=k*cosmology.coverH0;
-//     printf("Entering\n");
+    //     printf("Entering\n");
     double k3=kkorr*kkorr*kkorr;
     double fac=cosmology.sigma_8*cosmology.sigma_8*k3/(2.*constants.pi*constants.pi*sigma_8_sqr());
-   // printf("entering eisenstein transfer function\n");
+    // printf("entering eisenstein transfer function\n");
     return(fac*Tsqr_EH(kkorr));
   }    //EH 99
   if (configuration.transferfunction_EH99==2){
     double kkorr=k*cosmology.coverH0;
-   // printf("KKORR=%le %le %le\n",kkorr,Tsqr_EH_wiggle(kkorr/3000.),Tsqr_EH(kkorr));
+    // printf("KKORR=%le %le %le\n",kkorr,Tsqr_EH_wiggle(kkorr/3000.),Tsqr_EH(kkorr));
     double k3=kkorr*kkorr*kkorr;
     double  fac=cosmology.sigma_8*cosmology.sigma_8*k3/(2.*constants.pi*constants.pi*sigma_8_sqr_EH_wiggle());
     //printf("entering wiggled transfer function\n");
@@ -429,30 +429,30 @@ double Delta_L_tab(double rk)
 
 
 double p_lin(double k_NL,double a){     
-     static double OMEGA_M = -42.;
-     static double OMEGA_V = -42.;
-     static double N_SPEC  = -42.;
-     static double OMB   = -42.;
-     static double H0  = -42.;
-     static double SIGMA_8 = -42.;
-     static double W0      = -42.;
-     static double WA      = -42.;
-     static double **table_P_Lz = 0;
-     static double logkmin = 0., logkmax = 0., dk = 0., da = 0.;
-       
-     double plin,rk,om_m,om_v,amp,ampsqr,grow0,aa,klog,Pdelta,val;
-     
-//     printf("plin test a=%le k=%le\n",a,k_NL);
-     int i,j;
-     if (a >= 0.99999){a =0.99999;}
-     if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  ||W0 != cosmology.w0 || WA != cosmology.wa || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 !=cosmology.h0 || SIGMA_8 != cosmology.sigma_8) {
-     if (table_P_Lz!=0) sm2_free_matrix(table_P_Lz,0, table_N_a-1, 0, table_N_k-1);  
-     table_P_Lz = sm2_matrix(0, table_N_a-1, 0, table_N_k-1);
-     //printf("new P_Delta\n");
-     grow0=growfac(1.,1.,1.);
-     da = (1. - limits.a_min)/(table_N_a-1.);
-     aa = limits.a_min;
-     for (i=0; i<table_N_a; i++, aa +=da) {
+  static double OMEGA_M = -42.;
+  static double OMEGA_V = -42.;
+  static double N_SPEC  = -42.;
+  static double OMB   = -42.;
+  static double H0  = -42.;
+  static double SIGMA_8 = -42.;
+  static double W0      = -42.;
+  static double WA      = -42.;
+  static double **table_P_Lz = 0;
+  static double logkmin = 0., logkmax = 0., dk = 0., da = 0.;
+  
+  double plin,rk,om_m,om_v,amp,ampsqr,grow0,aa,klog,Pdelta,val;
+  
+  //     printf("plin test a=%le k=%le\n",a,k_NL);
+  int i,j;
+  if (a >= 0.99999){a =0.99999;}
+  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  ||W0 != cosmology.w0 || WA != cosmology.wa || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 !=cosmology.h0 || SIGMA_8 != cosmology.sigma_8) {
+    if (table_P_Lz!=0) sm2_free_matrix(table_P_Lz,0, table_N_a-1, 0, table_N_k-1);  
+    table_P_Lz = sm2_matrix(0, table_N_a-1, 0, table_N_k-1);
+    //printf("new P_Delta\n");
+    grow0=growfac(1.,1.,1.);
+    da = (1. - limits.a_min)/(table_N_a-1.);
+    aa = limits.a_min;
+    for (i=0; i<table_N_a; i++, aa +=da) {
       if(aa>1.0) aa=1.0;
       omega_a(aa,&om_m,&om_v);
       amp=growfac(aa,1.,1.)/grow0;
@@ -462,44 +462,44 @@ double p_lin(double k_NL,double a){
       logkmax = log(limits.Pdelta_halo_k_max);
       dk = (logkmax - logkmin)/(table_N_k-1.);
       klog = logkmin;
-        for (j=0; j<table_N_k; j++, klog += dk) {
-	 rk=exp(klog)/cosmology.coverH0;
-     //    printf("plin test a=%le k=%le\n",aa,rk);
-	 plin=ampsqr*Delta_L_tab(rk);
-//	 printf("plin test a=%le k=%le\n",aa,rk); 
-	  Pdelta=plin;
+      for (j=0; j<table_N_k; j++, klog += dk) {
+	rk=exp(klog)/cosmology.coverH0;
+	//    printf("plin test a=%le k=%le\n",aa,rk);
+	plin=ampsqr*Delta_L_tab(rk);
+	//	 printf("plin test a=%le k=%le\n",aa,rk); 
+	Pdelta=plin;
 	//table_k[j] = klog;
 	table_P_Lz[i][j] = log(2*constants.pi_sqr*Pdelta) - 3.*klog;
 	//printf("%le %le\n",rk,table_P_Lz[i][j]);
-	}
-	//printf("%le %le\n",limits.Pdelta_halo_k_min,limits.Pdelta_halo_k_max);
-//	printf("table finished\n");
-//	upper = cosmology.n_spec-4.0;
-        //sm2_spline(table_k-1, table_P-1, table_N_k, cosmology.n_spec, 0.0, y2-1);
-// 	klog = logkmin;
-// 	for (j=0; j<table_N_k; j++, klog += dk) {
-// 	    sm2_splint(table_k-1, table_P-1, y2-1, table_N_k, klog, &val);
-// 	    table_P_Lz[i][j] = val;
-// 	    }
       }
-//      printf("table finished\n");
-      OMEGA_M = cosmology.Omega_m ;
-      OMEGA_V = cosmology.Omega_v ;
-      N_SPEC  = cosmology.n_spec;
-      OMB = cosmology.omb;
-      H0=cosmology.h0; 
-      SIGMA_8 = cosmology.sigma_8; 
-      W0      = cosmology.w0;
-      WA      = cosmology.wa;
-      //printf("P_delta_table finished\n");
-   }    
-   klog = log(k_NL); 
-   //printf("%le\n",exp(klog));
-//   upper = cosmology.n_spec-4.0;
-   
-   val = sm2_interpol2d(table_P_Lz, table_N_a, limits.a_min, 1., da, a, table_N_k, logkmin, logkmax, dk, klog, cosmology.n_spec, 0.0);
-   //if(k_NL>1.e3) printf("%le %le\n",k_NL,exp(val));
-   return exp(val);     
+      //printf("%le %le\n",limits.Pdelta_halo_k_min,limits.Pdelta_halo_k_max);
+      //	printf("table finished\n");
+      //	upper = cosmology.n_spec-4.0;
+      //sm2_spline(table_k-1, table_P-1, table_N_k, cosmology.n_spec, 0.0, y2-1);
+      // 	klog = logkmin;
+      // 	for (j=0; j<table_N_k; j++, klog += dk) {
+	// 	    sm2_splint(table_k-1, table_P-1, y2-1, table_N_k, klog, &val);
+	// 	    table_P_Lz[i][j] = val;
+	// 	    }
+    }
+    //      printf("table finished\n");
+    OMEGA_M = cosmology.Omega_m ;
+    OMEGA_V = cosmology.Omega_v ;
+    N_SPEC  = cosmology.n_spec;
+    OMB = cosmology.omb;
+    H0=cosmology.h0; 
+    SIGMA_8 = cosmology.sigma_8; 
+    W0      = cosmology.w0;
+    WA      = cosmology.wa;
+    //printf("P_delta_table finished\n");
+  }    
+  klog = log(k_NL); 
+  //printf("%le\n",exp(klog));
+  //   upper = cosmology.n_spec-4.0;
+  
+  val = sm2_interpol2d(table_P_Lz, table_N_a, limits.a_min, 1., da, a, table_N_k, logkmin, logkmax, dk, klog, cosmology.n_spec, 0.0);
+  //if(k_NL>1.e3) printf("%le %le\n",k_NL,exp(val));
+  return exp(val);     
 }
 
 
@@ -1046,54 +1046,225 @@ double f_K(double chi)
 /*      Redshift distribution with cuts, etc. (BG)                                     
  */
 /************************************************************************************/
-double int_for_zdistr(double z)
-{
-  double zz=z/redshiftshear.z0;
-  return pow(zz,redshiftshear.alpha)*exp(-pow(zz,redshiftshear.beta_p));
+
+
+
+
+double p_zphot(double zp, double zs){
+  static double init = -42.;
+  static double **table_z = 0;
+  static double zmin = 0.04, zmax = 1.96, dz = 0.08;
+  if (init != 1.0){
+    if (!table_z) {table_z = sm2_matrix(0, table_N_zp-1, 0, table_N_zs-1);}
+    FILE *ein;
+    int i,j;
+    double a2,a3,a4,z,z1;
+    ein = fopen("./distr_zphot_zspec","r");
+    for (i = 0; i< table_N_zs; i++){
+      for (j = 0; j< table_N_zp; j++){
+	fscanf(ein,"%le %le %le %le %le",&z1,&a2,&a3,&a4,&z);
+	table_z[j][i] = a3;
+      }
+    }
+    init = 1.0;
+  }
+  if (zs < zmin || zp < zmin || zs> zmax ||zp> zmax){return 0;}
+  else{	return sm2_interpol2d(table_z,table_N_zp, zmin, zmax,dz,zp,table_N_zs, zmin, zmax,dz,zs,1.0,1.0)/dz;}	
+}
+
+double p_zspec(double zs, double zp){
+  static double init = -42.;
+  static double **table_z = 0;
+  static double zmin = 0.01, zmax = 1.99, dz = 0.02;
+  if (init != 1.0){
+    if (!table_z) {table_z = sm2_matrix(0, table_N_zs-1, 0, table_N_zp-1);}
+    FILE *ein;
+    int i,j;
+    double a2,a3,a4,z,z1;
+    ein = fopen("./distr_zphot_zspec_100","r");
+    for (i = 0; i< table_N_zs; i++){
+      for (j = 0; j< table_N_zp; j++){
+	fscanf(ein,"%le %le %le %le %le",&z1,&a2,&a3,&a4,&z);
+	table_z[i][j] = a4;
+      }
+    }
+    init = 1.0;
+  }
+  if (zs < zmin && zp >zmin && zp < zmax){return sm2_interpol2d(table_z,table_N_zs, zmin, zmax,dz,zmin,table_N_zp, zmin, zmax,dz,zp,1.0,1.0)/dz;}
+  if (zp < zmin && zs >zmin && zs < zmax){return sm2_interpol2d(table_z,table_N_zs, zmin, zmax,dz,zs,table_N_zp, zmin, zmax,dz,zmin,1.0,1.0)/dz;}
+  else if (zs> zmax ||zp> zmax){return 0;}
+  else{ return sm2_interpol2d(table_z,table_N_zs, zmin, zmax,dz,zs,table_N_zp, zmin, zmax,dz,zp,1.0,1.0)/dz;}
 }
 
 
+double int_for_zdistr_photoz_inner(double z, void *params)
+{
+  double *array = (double*)params;
+  double zz=z/redshift.shear_z0;
+  return pow(zz,redshift.shear_alpha)*exp(-pow(zz,redshift.shear_beta_p))*p_zspec(array[2],z);
+}
 
-double int_for_zdistr_mock(double z)
+double int_for_zdistr_photoz(double ztrue, void *params)
+{
+  double *array = (double*)params;
+  double result,error;
+  array[2] = ztrue;
+  gsl_integration_workspace *w;
+  gsl_function H;
+  
+  
+  w = gsl_integration_workspace_alloc (1000);
+  
+  
+  H.function = &int_for_zdistr_photoz_inner;
+  H.params = (void*)array;
+  
+  
+  gsl_integration_qag (&H,array[0],array[1], 0, 1.e-3, 1000, GSL_INTEG_GAUSS41, w, &result, &error); 
+  gsl_integration_workspace_free(w);
+  return result;
+}
+
+double int_for_zdistr_mock_photoz_inner(double z, void *params)
 {
   int i; 
-  double val,*z_vector,*Nz_vector,space1,space2;
+  double val,*z_vector,*Nz_vector,space1,space2,ztrue;
+  double *array = (double*)params;
   char filename[200];
   FILE *ein;
   int static table=0;
-  
+  double static zhisto_max,zhisto_min;
+  ztrue = array[2];
   if (table!=1){
-    z_vector=sm2_vector(0, redshiftshear.histogram_zbins-1);
-    Nz_vector=sm2_vector(0, redshiftshear.histogram_zbins-1);
+    z_vector=sm2_vector(0, redshift.shear_histogram_zbins-1);
+    Nz_vector=sm2_vector(0, redshift.shear_histogram_zbins-1);
     const gsl_interp_type *redshift_t5 = gsl_interp_cspline;
     zaccel5 = gsl_interp_accel_alloc();
-    redshift_distrib_spline = gsl_spline_alloc (redshift_t5,redshiftshear.histogram_zbins);
-    sprintf(filename,"%s",redshiftshear.REDSHIFT_FILE);	  
+    redshift_distrib_spline = gsl_spline_alloc (redshift_t5,redshift.shear_histogram_zbins);
+    sprintf(filename,"%s",redshift.shear_REDSHIFT_FILE);	 
     printf("%s\n",filename);
     ein=fopen(filename,"r");
     
-    for (i=0;i<redshiftshear.histogram_zbins;i++){
+    
+    for (i=0;i<redshift.shear_histogram_zbins;i++){
       fscanf(ein,"%le %le %le %le\n",&space1,&z_vector[i],&space2,&Nz_vector[i]);
-    //  printf("%le %le\n",z_vector[i],Nz_vector[i]);
+      //	printf("%le %le\n",z_vector[i],Nz_vector[i]);
     }
     fclose(ein);
     table=1;
-    gsl_spline_init (redshift_distrib_spline, z_vector,Nz_vector,redshiftshear.histogram_zbins);    
-    sm2_free_vector(z_vector,0,redshiftshear.histogram_zbins-1);    
-    sm2_free_vector(Nz_vector,0,redshiftshear.histogram_zbins-1);
+    gsl_spline_init (redshift_distrib_spline, z_vector,Nz_vector,redshift.shear_histogram_zbins);    
+    zhisto_max=z_vector[redshift.shear_histogram_zbins-1];
+    zhisto_min=z_vector[0];
     
-    printf("USING 4 column z-distrib\n");
+    
+    sm2_free_vector(z_vector,0,redshift.shear_histogram_zbins-1);    
+    sm2_free_vector(Nz_vector,0,redshift.shear_histogram_zbins-1);
+    
+    
+    //printf("USING 4 column z-distrib\n");
   }
-  val= gsl_spline_eval(redshift_distrib_spline,z,zaccel5);
-  //printf("%le\n",val);
+  if((z<zhisto_min) && (z>=redshift.shear_zdistrpar_zmin)) return gsl_spline_eval(redshift_distrib_spline,zhisto_min,zaccel5)*p_zspec(ztrue,zhisto_min);
+  if((z>zhisto_max) && (z<=redshift.shear_zdistrpar_zmax)) return gsl_spline_eval(redshift_distrib_spline,zhisto_max,zaccel5)*p_zspec(ztrue,zhisto_max);
+  val= gsl_spline_eval(redshift_distrib_spline,z,zaccel5)*p_zspec(ztrue,z);
   if (isnan(val))  printf("Redshift range exceeded: z=%le\n",z);
   return val;
 }
 
 
 
+double int_for_zdistr_mock_photoz(double ztrue, void *params)
+{
+  double *array = (double*)params;
+  double result;
+  array[2] = ztrue;
+  double z,dz;
+  dz = (array[1]-array[0])/100.0;
+  result = 0.0;
+  for (z = array[0] + 0.5*dz;z < array[1]; z += dz){
+    result += int_for_zdistr_mock_photoz_inner(z,(void*)array)*dz;
+  }
+  /*    gsl_integration_workspace *w;
+   * gsl_function H;
+   * 
+   * 
+   * w = gsl_integration_workspace_alloc (1000);
+   * 
+   * 
+   * H.function = &int_for_zdistr_mock_photoz_inner;
+   * H.params = (void*)array;
+   * 
+   * 
+   * gsl_integration_qag (&H,array[0],array[1], 0, 1.e-3, 1000, GSL_INTEG_GAUSS41,
+   * w, &result, &error); 
+   * gsl_integration_workspace_free(w);*/
+  return result;
+}
 
-/*
+
+
+double zdistr_photoz(double z,int i) //returns p(ztrue | i), works with binned or analytic distributions; i =-1 -> no tomography; i>= 0 -> tomography bin i
+{
+  static double norm[6] = {-42.0,-42.0,-42.0,-42.0,-42.0,-42.0};
+  double array[3];
+  if (i < 0){array[0] = redshift.shear_zdistrpar_zmin; array[1] = redshift.shear_zdistrpar_zmax;}
+  if (i>= 0 && i < tomo.shear_Nbin){array[0] =tomo.shear_zmin[i];array[1] = tomo.shear_zmax[i];}
+  //First, compute the normalization
+  if (norm[i+1]< 0)
+  {
+    /*	gsl_integration_workspace *w;
+     * gsl_function H;
+     * 
+     * 
+     * w = gsl_integration_workspace_alloc (1000);
+     * 
+     * 
+     * H.params = (void*)array;*/
+    double zi,dz;
+    dz = (redshift.shear_zdistrpar_zmax-redshift.shear_zdistrpar_zmin)/200.0;
+    norm[i+1] = 0.0;
+    
+    
+    if(redshift.shear_histogram_zbins != 0 )
+    { 	
+      for (zi = redshift.shear_zdistrpar_zmin + 0.5*dz;zi < redshift.shear_zdistrpar_zmax; zi += dz){
+	norm[i+1] += int_for_zdistr_mock_photoz(zi,(void*)array)*dz;
+      }
+      //H.function = &int_for_zdistr_mock_photoz;
+    }
+    
+    
+    if((redshift.shear_beta_p>0.) && (redshift.shear_histogram_zbins == 0 ))
+    {
+      for (zi = redshift.shear_zdistrpar_zmin + 0.5*dz;zi < redshift.shear_zdistrpar_zmax; zi += dz){
+	norm[i+1] += int_for_zdistr_mock_photoz(zi,(void*)array)*dz;
+      }
+      
+      
+      //H.function = &int_for_zdistr_photoz;
+    }
+    //gsl_integration_qag (&H,redshift.shear_zdistrpar_zmin,redshift.shear_zdistrpar_zmax, 0, 1.e-3, 1000, GSL_INTEG_GAUSS41,w, &norm, &error); 
+    //gsl_integration_workspace_free(w);
+  }
+   
+  if(redshift.shear_histogram_zbins != 0)
+  {
+    if((redshift.shear_zdistrpar_zmin || redshift.shear_zdistrpar_zmax) && (z>redshift.shear_zdistrpar_zmax || z<redshift.shear_zdistrpar_zmin)) return 0.0;
+    return int_for_zdistr_mock_photoz(z,(void*)array)/norm[i+1];
+  }
+  
+  if((redshift.shear_zdistrpar_zmin || redshift.shear_zdistrpar_zmax) && (z>redshift.shear_zdistrpar_zmax || z<redshift.shear_zdistrpar_zmin)) return 0.0;
+  return int_for_zdistr_photoz(z,(void*)array)/norm[i+1];
+}
+
+
+double int_for_zdistr(double z)
+{
+  double zz=z/redshift.shear_z0;
+  return pow(zz,redshift.shear_alpha)*exp(-pow(zz,redshift.shear_beta_p));
+}
+
+
+
 double int_for_zdistr_mock(double z)
 {
   int i; 
@@ -1101,62 +1272,94 @@ double int_for_zdistr_mock(double z)
   char filename[200];
   FILE *ein;
   int static table=0;
-  double static zmax,zmin,zmaxint,zminint;
+  double static zhisto_max,zhisto_min;
   
   if (table!=1){
-    z_vector=sm2_vector(0, redshiftshear.histogram_zbins-1);
-    Nz_vector=sm2_vector(0, redshiftshear.histogram_zbins-1);
+    z_vector=sm2_vector(0, redshift.shear_histogram_zbins-1);
+    Nz_vector=sm2_vector(0, redshift.shear_histogram_zbins-1);
     const gsl_interp_type *redshift_t5 = gsl_interp_cspline;
     zaccel5 = gsl_interp_accel_alloc();
-    redshift_distrib_spline = gsl_spline_alloc (redshift_t5,redshiftshear.histogram_zbins);
-    sprintf(filename,"%s",redshiftshear.REDSHIFT_FILE);	  
+    redshift_distrib_spline = gsl_spline_alloc (redshift_t5,redshift.shear_histogram_zbins);
+    sprintf(filename,"%s",redshift.shear_REDSHIFT_FILE);	 
     printf("%s\n",filename);
     ein=fopen(filename,"r");
     
-    for (i=0;i<redshiftshear.histogram_zbins;i++){
+    
+    for (i=0;i<redshift.shear_histogram_zbins;i++){
       fscanf(ein,"%le %le %le %le\n",&space1,&z_vector[i],&space2,&Nz_vector[i]);
-    //  printf("%le %le\n",z_vector[i],Nz_vector[i]);
-      if(i==0) {
-	zmin=space1;
-	zminint=z_vector[i];
-      }
-      if(i==redshiftshear.histogram_zbins-1){
-	zmax=space2;
-	zmaxint=z_vector[i];
-      }
+      //	printf("%le %le\n",z_vector[i],Nz_vector[i]);
     }
     fclose(ein);
     table=1;
-    gsl_spline_init (redshift_distrib_spline, z_vector,Nz_vector,redshiftshear.histogram_zbins);    
-    sm2_free_vector(z_vector,0,redshiftshear.histogram_zbins-1);    
-    sm2_free_vector(Nz_vector,0,redshiftshear.histogram_zbins-1);
+    gsl_spline_init (redshift_distrib_spline, z_vector,Nz_vector,redshift.shear_histogram_zbins);    
+    zhisto_max=z_vector[redshift.shear_histogram_zbins-1];
+    zhisto_min=z_vector[0];
     
-    printf("USING 4 column z-distrib\n");
+    
+    sm2_free_vector(z_vector,0,redshift.shear_histogram_zbins-1);    
+    sm2_free_vector(Nz_vector,0,redshift.shear_histogram_zbins-1);
+    
+    
+    //printf("USING 4 column z-distrib\n");
   }
-  if((z<zminint) && (z>=redshiftshear.zdistrpar_zmin)) z=zmin;
-  if((z>zmaxint) && (z<=redshiftshear.zdistrpar_zmax)) z=zmax;   
-  val= gsl_spline_eval(redshift_distrib_spline,z,zaccel5);
+  if((z<zhisto_min) && (z>=redshift.shear_zdistrpar_zmin)) return gsl_spline_eval(redshift_distrib_spline,zhisto_min,zaccel5);
+  if((z>zhisto_max) && (z<=redshift.shear_zdistrpar_zmax)) return gsl_spline_eval(redshift_distrib_spline,zhisto_max,zaccel5);
+   val= gsl_spline_eval(redshift_distrib_spline,z,zaccel5);
   //printf("%le\n",val);
-  if (isnan(val))  printf("Redshift range exceeded:%le %le %le %le z=%le\n",zmin,zmax,zminint,zmaxint,z);
+  if (isnan(val))  printf("Redshift range exceeded:%le %le %le %le z=%le\n",zhisto_min,zhisto_max,redshift.shear_zdistrpar_zmin,redshift.shear_zdistrpar_zmax,z);
   return val;
 }
-*/
+
 
 
 double zdistr(double z)
 {
   static double norm = 0.;
-  int static normi =-42;
+  static int normi = 0;
+  double x, f;
   //First, compute the normalization
-    if(normi != 0 )
-      {       
-    norm = sm2_qromb(int_for_zdistr_mock,redshiftshear.zdistrpar_zmin,redshiftshear.zdistrpar_zmax);
-      normi=0;
-      //printf("norm=%le\n",norm);
-      }
-    if(z>redshiftshear.zdistrpar_zmax || z<redshiftshear.zdistrpar_zmin) return 0.0;
-    return int_for_zdistr_mock(z)/norm;    
+  if (normi != 1)
+  {
+    if(redshift.shear_histogram_zbins != 0 )
+    {       //use redshift distribution numeric normalization
+    norm = sm2_qromb(int_for_zdistr_mock,redshift.shear_zdistrpar_zmin,redshift.shear_zdistrpar_zmax);
+    }
+        
+    if((redshift.shear_beta_p>0.) && (redshift.shear_histogram_zbins == 0 ))
+    {
+      norm = 1.0/(sm2_qromb(int_for_zdistr,redshift.shear_zdistrpar_zmin,redshift.shear_zdistrpar_zmax));
+    }
+  normi=1;
+    
+  }
+  
+  if(redshift.shear_histogram_zbins != 0)
+  {
+    if(z>redshift.shear_zdistrpar_zmax || z<redshift.shear_zdistrpar_zmin) return 0.0;
+    //printf("int_for_zdistr_mock %le %le %le %le\n",z,int_for_zdistr_mock(z),norm,int_for_zdistr_mock(z)/norm);
+    return int_for_zdistr_mock(z)/norm;
+  }
+  
+  
+  if((redshift.shear_zdistrpar_zmin || redshift.shear_zdistrpar_zmax) && (z>redshift.shear_zdistrpar_zmax || z<redshift.shear_zdistrpar_zmin)) return 0.0;
+  if (z<0 && z<-1e-6)
+  {
+    printf("Negative z in %s, line%d \n",__FILE__,__LINE__);
+  }
+  if (z<0) x = 0;
+  else x = z/redshift.shear_z0;
+  if (fabs(redshift.shear_beta_p - 1.) < 1e-6) {
+    f = x;
+  } else {
+    f = pow(x,redshift.shear_beta_p);
+  }
+  f=exp(-f);
+  return norm*pow(x,redshift.shear_alpha)*f;
 }
+
+
+
+
 
 
 
@@ -1182,15 +1385,24 @@ double g_source(double a)
   static double W_0= -42.;
   static double W_A = -42.;
   
-  static double Z_MAX  = -42.;
-  static double Z_MIN   = -42.;
   static double *table;
   
   static double da = 0.0;
-  double aa;
+  double aa,chi_delta;
   int i;
- 
-  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W_0 != cosmology.w0   || W_A!= cosmology.wa  ||Z_MAX !=redshiftshear.zdistrpar_zmax ||Z_MIN !=redshiftshear.zdistrpar_zmin) 
+  if(redshift.shear_photoz==1){
+    
+    return 0.0;
+  }
+  
+  if ((redshift.shear_beta_p == 0.0) && (redshift.shear_histogram_zbins == 0)) {
+    aa = 1./(1.+redshift.shear_z0);
+    if (a<=aa) return 0.0;
+    chi_delta = chi(aa);
+    return f_K(chi_delta-chi(a))/f_K(chi_delta);
+  }
+  if(redshift.shear_photoz==0){
+  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W_0 != cosmology.w0   || W_A!= cosmology.wa) 
   {
     if (table!=0) sm2_free_vector(table, 0, table_N_a-1);
     table   = sm2_vector(0, table_N_a-1);
@@ -1201,16 +1413,14 @@ double g_source(double a)
     for (i=0;i<table_N_a;i++,aa+=da) {
       global.aglob = aa;
       table[i] = sm2_qromb(int_for_g, limits.a_min, aa);
-     // printf("%le %le\n",1./aa-1,table[i]);
+      // printf("%le %le\n",1./aa-1,table[i]);
     }
     table[table_N_a-1] = 1.;
     OMEGA_M = cosmology.Omega_m ;
     OMEGA_V = cosmology.Omega_v ;
     W_0 = cosmology.w0 ;
     W_A = cosmology.wa ;
-  
-    Z_MAX   =   redshiftshear.zdistrpar_zmax;
-    Z_MIN   =   redshiftshear.zdistrpar_zmin;
+  }
   }
   return sm2_interpol(table, table_N_a, limits.a_min, 0.999999, da, a, 1.0, 1.0);
 }
@@ -1248,15 +1458,12 @@ double P_shear_shear(double s)
   static double H0   = -42.;
   static double SIGMA_8 = -42.;
   
-  static double Z_MAX  = -42.;
-  static double Z_MIN   = -42.;
-  
   static double *table;
   static double ds = .0, logsmin = .0, logsmax = .0;
   double f1,slog,f2;
   int i;
   
-  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 != cosmology.h0 || SIGMA_8 != cosmology.sigma_8  ||Z_MAX !=redshiftshear.zdistrpar_zmax || Z_MIN !=redshiftshear.zdistrpar_zmin)
+  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 != cosmology.h0 || SIGMA_8 != cosmology.sigma_8  )
   {
     logsmin = log(limits.P_2_s_min);
     logsmax = log(limits.P_2_s_max);
@@ -1278,8 +1485,6 @@ double P_shear_shear(double s)
     SIGMA_8 =  cosmology.sigma_8;
     W0      = cosmology.w0;
     WA      = cosmology.wa;
-    Z_MAX   = redshiftshear.zdistrpar_zmax;
-    Z_MIN   = redshiftshear.zdistrpar_zmin;
   }
   slog = log(s);
   f1 = sm2_interpol(table, table_N_s, logsmin, logsmax, ds, slog, cosmology.n_spec, cosmology.n_spec-4.0);
@@ -1302,18 +1507,12 @@ double xi_shear_shear(int pm, double theta)
   static double OMB   = -42.;
   static double H0   = -42.;
   static double N_SPEC  = -42.;
-  static double ALPHA  = -42.;
-  static double BETA_P  = -42.;
-  static double Z0      = -42.;
-  static double Z_MAX  = -42.;
-  static double Z_MIN   = -42.;
   
-  static double NONLINEAR = -42;
   static double **table;
   static double dlogtheta, logthetamin, logthetamax;
   double res;
   
-  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || SIGMA_8 != cosmology.sigma_8 || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 !=cosmology.h0 || BETA_P != redshiftshear.beta_p || ALPHA != redshiftshear.alpha || Z0 != redshiftshear.z0 ||Z_MAX !=redshiftshear.zdistrpar_zmax ||Z_MIN !=redshiftshear.zdistrpar_zmin || NONLINEAR != cosmology.nonlinear) 
+  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || SIGMA_8 != cosmology.sigma_8 || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 !=cosmology.h0) 
   {
     OMEGA_M = cosmology.Omega_m ;
     OMEGA_V = cosmology.Omega_v ;
@@ -1324,13 +1523,6 @@ double xi_shear_shear(int pm, double theta)
     
     W0      = cosmology.w0;
     WA      = cosmology.wa;
-    NONLINEAR = cosmology.nonlinear;
-    
-    BETA_P  =   redshiftshear.beta_p;
-    ALPHA   = redshiftshear.alpha;
-    Z0      =  redshiftshear.z0;
-    Z_MAX   = redshiftshear.zdistrpar_zmax;
-    Z_MIN   = redshiftshear.zdistrpar_zmin;
     
     if (table!=0) sm2_free_matrix(table, 0, 1, 0, table_N_thetaH-1);
     table   = sm2_matrix(0, 1, 0, table_N_thetaH-1);
@@ -1423,18 +1615,12 @@ double xi_shear_magnification(int pm, double theta)
   static double OMB   = -42.;
   static double H0   = -42.;
   static double N_SPEC  = -42.;
-  static double ALPHA  = -42.;
-  static double BETA_P  = -42.;
-  static double Z0      = -42.;
-  static double Z_MAX  = -42.;
-  static double Z_MIN   = -42.;
   
-  static double NONLINEAR = -42;
   static double **table;
   static double dlogtheta, logthetamin, logthetamax;
   double res;
   
-  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || SIGMA_8 != cosmology.sigma_8 || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 !=cosmology.h0 || BETA_P != redshiftshear.beta_p || ALPHA != redshiftshear.alpha || Z0 != redshiftshear.z0 ||Z_MAX !=redshiftshear.zdistrpar_zmax ||Z_MIN !=redshiftshear.zdistrpar_zmin || NONLINEAR != cosmology.nonlinear) 
+  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || SIGMA_8 != cosmology.sigma_8 || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 !=cosmology.h0 ) 
   {
     OMEGA_M = cosmology.Omega_m ;
     OMEGA_V = cosmology.Omega_v ;
@@ -1445,13 +1631,6 @@ double xi_shear_magnification(int pm, double theta)
     
     W0      = cosmology.w0;
     WA      = cosmology.wa;
-    NONLINEAR = cosmology.nonlinear;
-    
-    BETA_P  =   redshiftshear.beta_p;
-    ALPHA   = redshiftshear.alpha;
-    Z0      =  redshiftshear.z0;
-    Z_MAX   = redshiftshear.zdistrpar_zmax;
-    Z_MIN   = redshiftshear.zdistrpar_zmin;
     
     if (table!=0) sm2_free_matrix(table, 0, 1, 0, table_N_thetaH-1);
     table   = sm2_matrix(0, 1, 0, table_N_thetaH-1);
@@ -1496,23 +1675,23 @@ void xi_via_hankel_shear_magnification(double **xi, double *logthetamin, double 
   /* go to log-Fourier-space */
   fftw_execute(plan);
   arg[0] = 0;   /* bias */
-   arg[1] = 2;   /* order of Bessel function */
-    /* perform the convolution, negative sign for kernel (complex conj.!) */
-    for(i=0; i<table_N_thetaH/2+1; i++) {
-      kk = 2*constants.pi*i/(dlnl*table_N_thetaH);
-      hankel_kernel_FT(kk, &kernel, arg, 2);
-      conv[i][0] = f_lP[i][0]*kernel[0]-f_lP[i][1]*kernel[1];
-      conv[i][1] = f_lP[i][1]*kernel[0]+f_lP[i][0]*kernel[1];
-    }
-    /* force Nyquist- and 0-frequency-components to be double */
-    conv[0][1] = 0;
-    conv[table_N_thetaH/2][1] = 0;
-    /* go back to double space, i labels log-bins in theta */
-    fftw_execute(plan1);
-    for(i=0; i<table_N_thetaH; i++) {
-      t = exp((nc-i)*dlnl-lnrc);             /* theta=1/l */
-      xi[0][table_N_thetaH-i-1] = lP[i]/(t*2*constants.pi*table_N_thetaH);
-    }
+  arg[1] = 2;   /* order of Bessel function */
+  /* perform the convolution, negative sign for kernel (complex conj.!) */
+  for(i=0; i<table_N_thetaH/2+1; i++) {
+    kk = 2*constants.pi*i/(dlnl*table_N_thetaH);
+    hankel_kernel_FT(kk, &kernel, arg, 2);
+    conv[i][0] = f_lP[i][0]*kernel[0]-f_lP[i][1]*kernel[1];
+    conv[i][1] = f_lP[i][1]*kernel[0]+f_lP[i][0]*kernel[1];
+  }
+  /* force Nyquist- and 0-frequency-components to be double */
+  conv[0][1] = 0;
+  conv[table_N_thetaH/2][1] = 0;
+  /* go back to double space, i labels log-bins in theta */
+  fftw_execute(plan1);
+  for(i=0; i<table_N_thetaH; i++) {
+    t = exp((nc-i)*dlnl-lnrc);             /* theta=1/l */
+    xi[0][table_N_thetaH-i-1] = lP[i]/(t*2*constants.pi*table_N_thetaH);
+  }
   
   *logthetamin = (nc-table_N_thetaH+1)*dlnl-lnrc;
   *logthetamax = nc*dlnl-lnrc;
@@ -1534,68 +1713,50 @@ void xi_via_hankel_shear_magnification(double **xi, double *logthetamin, double 
 double pf(double z)
 {
   static double norm = 0.;
-  static double BETA_P = -42.;
-  static double ALPHA  = -42.;
-  static double Z0     = -42.;
-  static double ZMIN   = -42.;
-  static double ZMAX   = -42.;
   double x, f;
   //First, compute the normalization
-  if (ALPHA != redshiftclustering.alpha || BETA_P != redshiftclustering.beta_p || Z0 != redshiftclustering.z0 || ZMIN !=redshiftclustering.zdistrpar_zmin || ZMAX !=redshiftclustering.zdistrpar_zmax)
-  {
-    if(redshiftclustering.histogram_zbins != 0 )
-    {       //use redshift distribution numeric normalization
-    //printf("Using redshift distribution REDSHIFT_FILE %le %le\n",redshiftclustering.zdistrpar_zmin,redshiftclustering.zdistrpar_zmax);
-    norm = sm2_qromb(int_for_zdistr_mock,redshiftclustering.zdistrpar_zmin,redshiftclustering.zdistrpar_zmax);
-    //printf("norm=%le\n",norm);
-    }
+  
+  if(redshift.clustering_photoz==1){
     
-    if((redshiftclustering.beta_p>0.) && (redshiftclustering.histogram_zbins == 0 ))
-    {
-      //                      if(redshiftclustering.zdistrpar_zmin || redshiftclustering.zdistrpar_zmax)
-      {       //with cuts: use numeric normalization
-      norm = 1.0/(sm2_qromb(int_for_zdistr,redshiftclustering.zdistrpar_zmin,redshiftclustering.zdistrpar_zmax));
-      }
-    }
-    ALPHA  = redshiftclustering.alpha;
-    BETA_P = redshiftclustering.beta_p;
-    Z0     = redshiftclustering.z0;
-    ZMIN   = redshiftclustering.zdistrpar_zmin;
-    ZMAX   = redshiftclustering.zdistrpar_zmax;
+    return 0.0;
   }
   
-  //if single source redshif plane :
-  if((redshiftclustering.beta_p==0) && (redshiftclustering.histogram_zbins == 0))
-  {
-    
-    if(fabs(z-redshiftclustering.z0)<1e-2){
-      return 1.0; 
-      
-    }
-    else return 0.0;
+  if(redshift.clustering_histogram_zbins != 0 )
+  {     
+  norm = sm2_qromb(int_for_zdistr_mock,redshift.clustering_zdistrpar_zmin,redshift.clustering_zdistrpar_zmax);
+  //printf("norm=%le\n",norm);
   }
   
-  if(redshiftclustering.histogram_zbins != 0)
+  if((redshift.clustering_beta_p!=0.) && (redshift.clustering_histogram_zbins == 0 ))
   {
-    if((redshiftclustering.zdistrpar_zmin || redshiftclustering.zdistrpar_zmax) && (z>redshiftclustering.zdistrpar_zmax || z<redshiftclustering.zdistrpar_zmin)) return 0.0;
+    //                      if(redshift.clustering_zdistrpar_zmin || redshift.clustering_zdistrpar_zmax)
+    {       //with cuts: use numeric normalization
+    norm = 1.0/(sm2_qromb(int_for_zdistr,redshift.clustering_zdistrpar_zmin,redshift.clustering_zdistrpar_zmax));
+    }
+  }
+  
+  
+  if(redshift.clustering_histogram_zbins != 0)
+  {
+    if((redshift.clustering_zdistrpar_zmin || redshift.clustering_zdistrpar_zmax) && (z>redshift.clustering_zdistrpar_zmax || z<redshift.clustering_zdistrpar_zmin)) return 0.0;
     //printf("int_for_zdistr_mock %le %le %le %le\n",z,int_for_zdistr_mock(z),norm,int_for_zdistr_mock(z)/norm);
     return int_for_zdistr_mock(z)/norm;
   }
   
-  if((redshiftclustering.zdistrpar_zmin || redshiftclustering.zdistrpar_zmax) && (z>redshiftclustering.zdistrpar_zmax || z<redshiftclustering.zdistrpar_zmin)) return 0.0;
+  if((redshift.clustering_zdistrpar_zmin || redshift.clustering_zdistrpar_zmax) && (z>redshift.clustering_zdistrpar_zmax || z<redshift.clustering_zdistrpar_zmin)) return 0.0;
   if (z<0 && z<-1e-6)
   {
     printf("Negative z in %s, line%d \n",__FILE__,__LINE__);
   }
   if (z<0) x = 0;
-  else x = z/redshiftclustering.z0;
-  if (fabs(redshiftclustering.beta_p - 1.) < 1e-6) {
+  else x = z/redshift.clustering_z0;
+  if (fabs(redshift.clustering_beta_p - 1.) < 1e-6) {
     f = x;
   } else {
-    f = pow(x,redshiftclustering.beta_p);
+    f = pow(x,redshift.clustering_beta_p);
   }
   f=exp(-f);
-  return norm*pow(x,redshiftclustering.alpha)*f;
+  return norm*pow(x,redshift.clustering_alpha)*f;
 }
 
 
@@ -1629,26 +1790,15 @@ double P_shear_position(double s)  //see Eq. 157 in Schneider 2006 WL
   static double H0   = -42.;
   static double SIGMA_8 = -42.;
   
-  static double BETA_P  = -42.;
-  static double ALPHA  = -42.;
-  static double Z0      = -42.;
-  static double Z_MAX  = -42.;
-  static double Z_MIN   = -42.;
-  static double BETA_P2  = -42.;
-  static double ALPHA2 = -42.;
-  static double Z02      = -42.;
-  static double Z_MAX2 = -42.;
-  static double Z_MIN2   = -42.;
   static double BIAS   = -42.;
   static double RCORR   = -42.;
-  static double NONLINEAR = -42;
   
   static double *table;
   static double ds = .0, logsmin = .0, logsmax = .0;
   double f1,slog,f2,fK,a, k;
   int i;
   
-  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 != cosmology.h0 || SIGMA_8 != cosmology.sigma_8 || BETA_P != redshiftshear.beta_p || ALPHA != redshiftshear.alpha || Z0 != redshiftshear.z0 ||Z_MAX !=redshiftshear.zdistrpar_zmax || Z_MIN !=redshiftshear.zdistrpar_zmin|| BETA_P2 != redshiftclustering.beta_p || ALPHA2 != redshiftclustering.alpha || Z02 != redshiftclustering.z0 ||Z_MAX2 !=redshiftclustering.zdistrpar_zmax || Z_MIN2 !=redshiftclustering.zdistrpar_zmin|| BIAS != cosmology.bias ||RCORR !=cosmology.rcorr || NONLINEAR != cosmology.nonlinear)
+  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 != cosmology.h0 || SIGMA_8 != cosmology.sigma_8 || BIAS != cosmology.bias ||RCORR !=cosmology.rcorr )
   {
     logsmin = log(limits.P_2_s_min);
     logsmax = log(limits.P_2_s_max);
@@ -1656,13 +1806,13 @@ double P_shear_position(double s)  //see Eq. 157 in Schneider 2006 WL
     slog = logsmin;
     if (table!=0) sm2_free_vector(table, 0, table_N_s-1);
     table   = sm2_vector(0, table_N_s-1);
-  
-   for (i=0; i<table_N_s; i++, slog+=ds) {
+    
+    for (i=0; i<table_N_s; i++, slog+=ds) {
       global.sglob = exp(slog);
-      /*case of single source redshift at redshiftclustering.z0, p(w) = delta(w-w0) */
-      if ((redshiftclustering.beta_p == 0.0) && (redshiftclustering.histogram_zbins == 0)) {
+      /*case of single source redshift at redshift.clustering_z0, p(w) = delta(w-w0) */
+      if ((redshift.clustering_beta_p == 0.0) && (redshift.clustering_histogram_zbins == 0)) {
 	
-	a = 1./(1.+redshiftclustering.z0);
+	a = 1./(1.+redshift.clustering_z0);
 	fK     =f_K(chi(a));
 	k      = global.sglob/fK;
 	table[i]= log(3./2.0*(cosmology.Omega_m)*g_source(a)/a/fK*cosmology.bias*cosmology.rcorr*2.0*constants.pi_sqr*Delta_nl_halo(a,k/cosmology.coverH0)/k/k/k); 
@@ -1683,18 +1833,7 @@ double P_shear_position(double s)  //see Eq. 157 in Schneider 2006 WL
     SIGMA_8 =  cosmology.sigma_8;
     W0      = cosmology.w0;
     WA      = cosmology.wa;
-    NONLINEAR = cosmology.nonlinear;
     
-    BETA_P  =   redshiftshear.beta_p;
-    ALPHA   = redshiftshear.alpha;
-    Z0      =   redshiftshear.z0;
-    Z_MAX   = redshiftshear.zdistrpar_zmax;
-    Z_MIN   = redshiftshear.zdistrpar_zmin;
-    BETA_P2  =   redshiftclustering.beta_p;
-    ALPHA2   = redshiftclustering.alpha;
-    Z02      =   redshiftclustering.z0;
-    Z_MAX2   = redshiftclustering.zdistrpar_zmax;
-    Z_MIN2   = redshiftclustering.zdistrpar_zmin;
     BIAS   = cosmology.bias;
     RCORR   = cosmology.rcorr;
   }
@@ -1715,28 +1854,17 @@ double xi_shear_position(int pm, double theta)
   static double H0   = -42.;
   static double SIGMA_8 = -42.;
   
-  static double BETA_P  = -42.;
-  static double ALPHA  = -42.;
-  static double Z0      = -42.;
-  static double Z_MAX  = -42.;
-  static double Z_MIN   = -42.;
-  static double BETA_P2  = -42.;
-  static double ALPHA2 = -42.;
-  static double Z02      = -42.;
-  static double Z_MAX2 = -42.;
-  static double Z_MIN2   = -42.;
   static double BIAS   = -42.;
   static double RCORR   = -42.;
   
-  static double NONLINEAR = -42;
   static double **table;
   static double dlogtheta, logthetamin, logthetamax;
   double res;
   
   
-  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 != cosmology.h0 || SIGMA_8 != cosmology.sigma_8 || BETA_P != redshiftshear.beta_p || ALPHA != redshiftshear.alpha || Z0 != redshiftshear.z0 ||Z_MAX !=redshiftshear.zdistrpar_zmax || Z_MIN !=redshiftshear.zdistrpar_zmin|| BETA_P2 != redshiftclustering.beta_p || ALPHA2 != redshiftclustering.alpha || Z02 != redshiftclustering.z0 ||Z_MAX2 !=redshiftclustering.zdistrpar_zmax || Z_MIN2 !=redshiftclustering.zdistrpar_zmin|| BIAS != cosmology.bias ||RCORR !=cosmology.rcorr|| NONLINEAR != cosmology.nonlinear)
- {
-   OMEGA_M =   cosmology.Omega_m ;
+  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 != cosmology.h0 || SIGMA_8 != cosmology.sigma_8 || BIAS != cosmology.bias ||RCORR !=cosmology.rcorr)
+  {
+    OMEGA_M =   cosmology.Omega_m ;
     OMEGA_V =   cosmology.Omega_v ;
     N_SPEC  =   cosmology.n_spec;
     OMB = cosmology.omb;
@@ -1744,29 +1872,17 @@ double xi_shear_position(int pm, double theta)
     SIGMA_8 =  cosmology.sigma_8;
     W0      = cosmology.w0;
     WA      = cosmology.wa;
-    NONLINEAR = cosmology.nonlinear;
-    
-    BETA_P  =   redshiftshear.beta_p;
-    ALPHA   = redshiftshear.alpha;
-    Z0      =   redshiftshear.z0;
-    Z_MAX   = redshiftshear.zdistrpar_zmax;
-    Z_MIN   = redshiftshear.zdistrpar_zmin;
-    BETA_P2  =   redshiftclustering.beta_p;
-    ALPHA2   = redshiftclustering.alpha;
-    Z02      =   redshiftclustering.z0;
-    Z_MAX2   = redshiftclustering.zdistrpar_zmax;
-    Z_MIN2   = redshiftclustering.zdistrpar_zmin;
     BIAS   = cosmology.bias;
     RCORR   = cosmology.rcorr;
-
+    
     if (table!=0) sm2_free_matrix(table, 0, 1, 0, table_N_thetaH-1);
     table   = sm2_matrix(0, 1, 0, table_N_thetaH-1);
     xi_via_hankel_shear_position(table, &logthetamin, &logthetamax);
     dlogtheta = (logthetamax-logthetamin)/((double)table_N_thetaH-1.0);
   }
   res = sm2_interpol(table[0], table_N_thetaH, logthetamin, logthetamax,dlogtheta, log(theta), 1.0, 1.0);
-    
-
+  
+  
   return res;
 }
 
@@ -1804,23 +1920,23 @@ void xi_via_hankel_shear_position(double **xi, double *logthetamin, double *logt
   /* go to log-Fourier-space */
   fftw_execute(plan);
   arg[0] = 0;   /* bias */
-    arg[1] = 2;   /* order of Bessel function */
-    /* perform the convolution, negative sign for kernel (complex conj.!) */
-    for(i=0; i<table_N_thetaH/2+1; i++) {
-      kk = 2*constants.pi*i/(dlnl*table_N_thetaH);
-      hankel_kernel_FT(kk, &kernel, arg, 2);
-      conv[i][0] = f_lP[i][0]*kernel[0]-f_lP[i][1]*kernel[1];
-      conv[i][1] = f_lP[i][1]*kernel[0]+f_lP[i][0]*kernel[1];
-    }
-    /* force Nyquist- and 0-frequency-components to be double */
-    conv[0][1] = 0;
-    conv[table_N_thetaH/2][1] = 0;
-    /* go back to double space, i labels log-bins in theta */
-    fftw_execute(plan1);
-    for(i=0; i<table_N_thetaH; i++) {
-      t = exp((nc-i)*dlnl-lnrc);             /* theta=1/l */
-      xi[0][table_N_thetaH-i-1] = lP[i]/(t*2*constants.pi*table_N_thetaH);
-    }
+  arg[1] = 2;   /* order of Bessel function */
+  /* perform the convolution, negative sign for kernel (complex conj.!) */
+  for(i=0; i<table_N_thetaH/2+1; i++) {
+    kk = 2*constants.pi*i/(dlnl*table_N_thetaH);
+    hankel_kernel_FT(kk, &kernel, arg, 2);
+    conv[i][0] = f_lP[i][0]*kernel[0]-f_lP[i][1]*kernel[1];
+    conv[i][1] = f_lP[i][1]*kernel[0]+f_lP[i][0]*kernel[1];
+  }
+  /* force Nyquist- and 0-frequency-components to be double */
+  conv[0][1] = 0;
+  conv[table_N_thetaH/2][1] = 0;
+  /* go back to double space, i labels log-bins in theta */
+  fftw_execute(plan1);
+  for(i=0; i<table_N_thetaH; i++) {
+    t = exp((nc-i)*dlnl-lnrc);             /* theta=1/l */
+    xi[0][table_N_thetaH-i-1] = lP[i]/(t*2*constants.pi*table_N_thetaH);
+  }
   
   *logthetamin = (nc-table_N_thetaH+1)*dlnl-lnrc;
   *logthetamax = nc*dlnl-lnrc;
@@ -1843,28 +1959,17 @@ double xi_magnification_position(int pm, double theta)
   static double H0   = -42.;
   static double SIGMA_8 = -42.;
   
-  static double BETA_P  = -42.;
-  static double ALPHA  = -42.;
-  static double Z0      = -42.;
-  static double Z_MAX  = -42.;
-  static double Z_MIN   = -42.;
-  static double BETA_P2  = -42.;
-  static double ALPHA2 = -42.;
-  static double Z02      = -42.;
-  static double Z_MAX2 = -42.;
-  static double Z_MIN2   = -42.;
   static double BIAS   = -42.;
   static double RCORR   = -42.;
   
-  static double NONLINEAR = -42;
   static double **table;
   static double dlogtheta, logthetamin, logthetamax;
   double res;
   
   
-  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 != cosmology.h0 || SIGMA_8 != cosmology.sigma_8 || BETA_P != redshiftshear.beta_p || ALPHA != redshiftshear.alpha || Z0 != redshiftshear.z0 ||Z_MAX !=redshiftshear.zdistrpar_zmax || Z_MIN !=redshiftshear.zdistrpar_zmin|| BETA_P2 != redshiftclustering.beta_p || ALPHA2 != redshiftclustering.alpha || Z02 != redshiftclustering.z0 ||Z_MAX2 !=redshiftclustering.zdistrpar_zmax || Z_MIN2 !=redshiftclustering.zdistrpar_zmin|| BIAS != cosmology.bias ||RCORR !=cosmology.rcorr|| NONLINEAR != cosmology.nonlinear)
- {
-   OMEGA_M =   cosmology.Omega_m ;
+  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 != cosmology.h0 || SIGMA_8 != cosmology.sigma_8 || BIAS != cosmology.bias ||RCORR !=cosmology.rcorr)
+  {
+    OMEGA_M =   cosmology.Omega_m ;
     OMEGA_V =   cosmology.Omega_v ;
     N_SPEC  =   cosmology.n_spec;
     OMB = cosmology.omb;
@@ -1872,29 +1977,16 @@ double xi_magnification_position(int pm, double theta)
     SIGMA_8 =  cosmology.sigma_8;
     W0      = cosmology.w0;
     WA      = cosmology.wa;
-    NONLINEAR = cosmology.nonlinear;
-    
-    BETA_P  =   redshiftshear.beta_p;
-    ALPHA   = redshiftshear.alpha;
-    Z0      =   redshiftshear.z0;
-    Z_MAX   = redshiftshear.zdistrpar_zmax;
-    Z_MIN   = redshiftshear.zdistrpar_zmin;
-    BETA_P2  =   redshiftclustering.beta_p;
-    ALPHA2   = redshiftclustering.alpha;
-    Z02      =   redshiftclustering.z0;
-    Z_MAX2   = redshiftclustering.zdistrpar_zmax;
-    Z_MIN2   = redshiftclustering.zdistrpar_zmin;
     BIAS   = cosmology.bias;
     RCORR   = cosmology.rcorr;
-
+    
     if (table!=0) sm2_free_matrix(table, 0, 1, 0, table_N_thetaH-1);
     table   = sm2_matrix(0, 1, 0, table_N_thetaH-1);
     xi_via_hankel_magnification_position(table, &logthetamin, &logthetamax);
     dlogtheta = (logthetamax-logthetamin)/((double)table_N_thetaH-1.0);
   }
   res = sm2_interpol(table[0], table_N_thetaH, logthetamin, logthetamax,dlogtheta, log(theta), 1.0, 1.0);
-    
-
+  
   return 2.0*res; //as P_shear_position = 2 P_mag_position
 }
 
@@ -1920,7 +2012,7 @@ void xi_via_hankel_magnification_position(double **xi, double *logthetamin, doub
     loglmax  = log(l_max);
     loglmin  = log(l_min);
     dlnl     = (loglmax-loglmin)/(1.0*table_N_thetaH-1);
-   //dlntheta = (lntmax-lntmin)/(1.0*table_N_thetaH-1);
+    //dlntheta = (lntmax-lntmin)/(1.0*table_N_thetaH-1);
     lnrc     = 0.5*(loglmax+loglmin);
     nc       = table_N_thetaH/2+1;
   }
@@ -1933,23 +2025,23 @@ void xi_via_hankel_magnification_position(double **xi, double *logthetamin, doub
   /* go to log-Fourier-space */
   fftw_execute(plan);
   arg[0] = 0;   /* bias */
-    arg[1] = 0;   /* order of Bessel function */
-    /* perform the convolution, negative sign for kernel (complex conj.!) */
-    for(i=0; i<table_N_thetaH/2+1; i++) {
-      kk = 2*constants.pi*i/(dlnl*table_N_thetaH);
-      hankel_kernel_FT(kk, &kernel, arg, 2);
-      conv[i][0] = f_lP[i][0]*kernel[0]-f_lP[i][1]*kernel[1];
-      conv[i][1] = f_lP[i][1]*kernel[0]+f_lP[i][0]*kernel[1];
-    }
-    /* force Nyquist- and 0-frequency-components to be double */
-    conv[0][1] = 0;
-    conv[table_N_thetaH/2][1] = 0;
-    /* go back to double space, i labels log-bins in theta */
-    fftw_execute(plan1);
-    for(i=0; i<table_N_thetaH; i++) {
-      t = exp((nc-i)*dlnl-lnrc);             /* theta=1/l */
-      xi[0][table_N_thetaH-i-1] = lP[i]/(t*2*constants.pi*table_N_thetaH);
-    }
+  arg[1] = 0;   /* order of Bessel function */
+  /* perform the convolution, negative sign for kernel (complex conj.!) */
+  for(i=0; i<table_N_thetaH/2+1; i++) {
+    kk = 2*constants.pi*i/(dlnl*table_N_thetaH);
+    hankel_kernel_FT(kk, &kernel, arg, 2);
+    conv[i][0] = f_lP[i][0]*kernel[0]-f_lP[i][1]*kernel[1];
+    conv[i][1] = f_lP[i][1]*kernel[0]+f_lP[i][0]*kernel[1];
+  }
+  /* force Nyquist- and 0-frequency-components to be double */
+  conv[0][1] = 0;
+  conv[table_N_thetaH/2][1] = 0;
+  /* go back to double space, i labels log-bins in theta */
+  fftw_execute(plan1);
+  for(i=0; i<table_N_thetaH; i++) {
+    t = exp((nc-i)*dlnl-lnrc);             /* theta=1/l */
+    xi[0][table_N_thetaH-i-1] = lP[i]/(t*2*constants.pi*table_N_thetaH);
+  }
   
   *logthetamin = (nc-table_N_thetaH+1)*dlnl-lnrc;
   *logthetamax = nc*dlnl-lnrc;
@@ -1968,7 +2060,7 @@ double int_for_p_position_position(double a)
 {
   double res,hoverh0,ell, fK, k;
   if (a >= 1.0) sm2_error("a>=1 in int_for_p_2");
-     
+  
   ell       = global.sglob;
   fK     = f_K(chi(a));
   k      = ell/fK;
@@ -1994,13 +2086,6 @@ double P_position_position(double s)  //see Eq. 157 in Schneider 2006 WL
   static double OMB   = -42.;
   static double H0   = -42.;
   static double SIGMA_8 = -42.;
-  static double NONLINEAR = -42;
-  
-  static double BETA_P2  = -42.;
-  static double ALPHA2 = -42.;
-  static double Z02      = -42.;
-  static double Z_MAX2 = -42.;
-  static double Z_MIN2   = -42.;
   static double BIAS   = -42.;
   static double RCORR   = -42.;
   
@@ -2010,7 +2095,7 @@ double P_position_position(double s)  //see Eq. 157 in Schneider 2006 WL
   double f1,slog,f2,fK,a, hoverh0,k;
   int i;
   
-  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 != cosmology.h0 || SIGMA_8 != cosmology.sigma_8 ||  BETA_P2 != redshiftclustering.beta_p || ALPHA2 != redshiftclustering.alpha || Z02 != redshiftclustering.z0 ||Z_MAX2 !=redshiftclustering.zdistrpar_zmax || Z_MIN2 !=redshiftclustering.zdistrpar_zmin|| BIAS != cosmology.bias ||RCORR !=cosmology.rcorr|| NONLINEAR != cosmology.nonlinear)
+  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 != cosmology.h0 || SIGMA_8 != cosmology.sigma_8 || BIAS != cosmology.bias ||RCORR !=cosmology.rcorr)
   {
     logsmin = log(limits.P_2_s_min);
     logsmax = log(limits.P_2_s_max);
@@ -2018,13 +2103,13 @@ double P_position_position(double s)  //see Eq. 157 in Schneider 2006 WL
     slog = logsmin;
     if (table!=0) sm2_free_vector(table, 0, table_N_s-1);
     table   = sm2_vector(0, table_N_s-1);
-  
+    
     for (i=0; i<table_N_s; i++, slog+=ds) {
       global.sglob = exp(slog);
-      /*case of single source redshift at redshiftclustering.z0, p(w) = delta(w-w0) */
-      if ((redshiftclustering.beta_p == 0.0) && (redshiftclustering.histogram_zbins == 0)) {
+      /*case of single source redshift at redshift.clustering_z0, p(w) = delta(w-w0) */
+      if ((redshift.clustering_beta_p == 0.0) && (redshift.clustering_histogram_zbins == 0)) {
 	
-	a = 1./(1.+redshiftclustering.z0);
+	a = 1./(1.+redshift.clustering_z0);
 	fK     =f_K(chi(a));
 	k      = global.sglob/fK;
 	hoverh0 = sqrt(cosmology.Omega_m /(a*a*a) + (1.-cosmology.Omega_m -cosmology.Omega_v )/(a*a) + omv_vareos(a) );
@@ -2047,13 +2132,7 @@ double P_position_position(double s)  //see Eq. 157 in Schneider 2006 WL
     SIGMA_8 =  cosmology.sigma_8;
     W0      = cosmology.w0;
     WA      = cosmology.wa;
-    NONLINEAR = cosmology.nonlinear;
     
-    BETA_P2  =   redshiftclustering.beta_p;
-    ALPHA2   = redshiftclustering.alpha;
-    Z02      =   redshiftclustering.z0;
-    Z_MAX2   = redshiftclustering.zdistrpar_zmax;
-    Z_MIN2   = redshiftclustering.zdistrpar_zmin;
     BIAS   = cosmology.bias;
     RCORR   = cosmology.rcorr;
   }
@@ -2075,20 +2154,13 @@ double xi_position_position(int pm, double theta)
   static double H0   = -42.;
   static double SIGMA_8 = -42.;
   
-  
-  static double BETA_P2  = -42.;
-  static double ALPHA2 = -42.;
-  static double Z02      = -42.;
-  static double Z_MAX2 = -42.;
-  static double Z_MIN2   = -42.;
   static double BIAS   = -42.;
   static double RCORR   = -42.;
   
-  static double NONLINEAR = -42;
   static double **table;
   static double dlogtheta, logthetamin, logthetamax;
   double res;
-  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 != cosmology.h0 || SIGMA_8 != cosmology.sigma_8 ||  BETA_P2 != redshiftclustering.beta_p || ALPHA2 != redshiftclustering.alpha || Z02 != redshiftclustering.z0 ||Z_MAX2 !=redshiftclustering.zdistrpar_zmax || Z_MIN2 !=redshiftclustering.zdistrpar_zmin|| BIAS != cosmology.bias ||RCORR !=cosmology.rcorr|| NONLINEAR != cosmology.nonlinear)
+  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 != cosmology.h0 || SIGMA_8 != cosmology.sigma_8 || BIAS != cosmology.bias ||RCORR !=cosmology.rcorr)
   {
     OMEGA_M =   cosmology.Omega_m ;
     OMEGA_V =   cosmology.Omega_v ;
@@ -2098,12 +2170,7 @@ double xi_position_position(int pm, double theta)
     SIGMA_8 =  cosmology.sigma_8;
     W0      = cosmology.w0;
     WA      = cosmology.wa;
-    NONLINEAR = cosmology.nonlinear;
-    BETA_P2  =   redshiftclustering.beta_p;
-    ALPHA2   = redshiftclustering.alpha;
-    Z02      =   redshiftclustering.z0;
-    Z_MAX2   = redshiftclustering.zdistrpar_zmax;
-    Z_MIN2   = redshiftclustering.zdistrpar_zmin;
+    
     BIAS   = cosmology.bias;
     RCORR   = cosmology.rcorr;
     
@@ -2139,9 +2206,9 @@ void xi_via_hankel_position_position(double **xi, double *logthetamin, double *l
     loglmax  = log(l_max);
     loglmin  = log(l_min);
     dlnl     = (loglmax-loglmin)/(1.0*table_N_thetaH-1);
-//     lntmin   = log(limits.xi_via_hankel_theta_min);
-//     lntmax   = log(limits.xi_via_hankel_theta_max);
-//     dlntheta = (lntmax-lntmin)/(1.0*table_N_thetaH-1);
+    //     lntmin   = log(limits.xi_via_hankel_theta_min);
+    //     lntmax   = log(limits.xi_via_hankel_theta_max);
+    //     dlntheta = (lntmax-lntmin)/(1.0*table_N_thetaH-1);
     lnrc     = 0.5*(loglmax+loglmin);
     nc       = table_N_thetaH/2+1;
   }
@@ -2154,23 +2221,23 @@ void xi_via_hankel_position_position(double **xi, double *logthetamin, double *l
   /* go to log-Fourier-space */
   fftw_execute(plan);
   arg[0] = 0;   /* bias */
-    arg[1] = 0;   /* order of Bessel function */
-    /* perform the convolution, negative sign for kernel (complex conj.!) */
-    for(i=0; i<table_N_thetaH/2+1; i++) {
-      kk = 2*constants.pi*i/(dlnl*table_N_thetaH);
-      hankel_kernel_FT(kk, &kernel, arg, 2);
-      conv[i][0] = f_lP[i][0]*kernel[0]-f_lP[i][1]*kernel[1];
-      conv[i][1] = f_lP[i][1]*kernel[0]+f_lP[i][0]*kernel[1];
-    }
-    /* force Nyquist- and 0-frequency-components to be double */
-    conv[0][1] = 0;
-    conv[table_N_thetaH/2][1] = 0;
-    /* go back to double space, i labels log-bins in theta */
-    fftw_execute(plan1);
-    for(i=0; i<table_N_thetaH; i++) {
-      t = exp((nc-i)*dlnl-lnrc);             /* theta=1/l */
-      xi[0][table_N_thetaH-i-1] = lP[i]/(t*2*constants.pi*table_N_thetaH);
-    }
+  arg[1] = 0;   /* order of Bessel function */
+  /* perform the convolution, negative sign for kernel (complex conj.!) */
+  for(i=0; i<table_N_thetaH/2+1; i++) {
+    kk = 2*constants.pi*i/(dlnl*table_N_thetaH);
+    hankel_kernel_FT(kk, &kernel, arg, 2);
+    conv[i][0] = f_lP[i][0]*kernel[0]-f_lP[i][1]*kernel[1];
+    conv[i][1] = f_lP[i][1]*kernel[0]+f_lP[i][0]*kernel[1];
+  }
+  /* force Nyquist- and 0-frequency-components to be double */
+  conv[0][1] = 0;
+  conv[table_N_thetaH/2][1] = 0;
+  /* go back to double space, i labels log-bins in theta */
+  fftw_execute(plan1);
+  for(i=0; i<table_N_thetaH; i++) {
+    t = exp((nc-i)*dlnl-lnrc);             /* theta=1/l */
+    xi[0][table_N_thetaH-i-1] = lP[i]/(t*2*constants.pi*table_N_thetaH);
+  }
   
   
   *logthetamin = (nc-table_N_thetaH+1)*dlnl-lnrc;
@@ -2251,19 +2318,8 @@ double P_GI(double s)  //see Eq. 157 in Schneider 2006 WL
   static double H0   = -42.;
   static double SIGMA_8 = -42.;
   
-  static double BETA_P  = -42.;
-  static double ALPHA  = -42.;
-  static double Z0      = -42.;
-  static double Z_MAX  = -42.;
-  static double Z_MIN   = -42.;
-  static double BETA_P2  = -42.;
-  static double ALPHA2 = -42.;
-  static double Z02      = -42.;
-  static double Z_MAX2 = -42.;
-  static double Z_MIN2   = -42.;
   static double BIAS   = -42.;
   static double RCORR   = -42.;
-  static double NONLINEAR = -42;
   static double NUISANCE =-42;
   
   static double *table;
@@ -2271,8 +2327,8 @@ double P_GI(double s)  //see Eq. 157 in Schneider 2006 WL
   double f1,slog,f2;
   int i;
   
-  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 != cosmology.h0 || SIGMA_8 != cosmology.sigma_8 || BETA_P != redshiftshear.beta_p || ALPHA != redshiftshear.alpha || Z0 != redshiftshear.z0 ||Z_MAX !=redshiftshear.zdistrpar_zmax || Z_MIN !=redshiftshear.zdistrpar_zmin|| BETA_P2 != redshiftclustering.beta_p || ALPHA2 != redshiftclustering.alpha || Z02 != redshiftclustering.z0 ||Z_MAX2 !=redshiftclustering.zdistrpar_zmax || Z_MIN2 !=redshiftclustering.zdistrpar_zmin|| BIAS != cosmology.bias ||RCORR !=cosmology.rcorr || NONLINEAR != cosmology.nonlinear|| NUISANCE!=nuisance
-.eta_ia)
+  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 != cosmology.h0 || SIGMA_8 != cosmology.sigma_8 || BIAS != cosmology.bias ||RCORR !=cosmology.rcorr || NUISANCE!=nuisance
+    .eta_ia)
   {
     logsmin = log(limits.P_2_s_min);
     logsmax = log(limits.P_2_s_max);
@@ -2283,10 +2339,10 @@ double P_GI(double s)  //see Eq. 157 in Schneider 2006 WL
     
     for (i=0; i<table_N_s; i++, slog+=ds) {
       global.sglob = exp(slog);
- 	f1 = sm2_qromb(int_for_p_GI, limits.a_min, 0.7); 
-	f2 = sm2_qromo(int_for_p_GI, .7, 1.0, sm2_midpnt);
-	table[i]= log(cosmology.bias*cosmology.rcorr*2.0*constants.pi_sqr*(f1 + f2)); 
-	//printf("calculating P_shear_position %d\n",i);
+      f1 = sm2_qromb(int_for_p_GI, limits.a_min, 0.7); 
+      f2 = sm2_qromo(int_for_p_GI, .7, 1.0, sm2_midpnt);
+      table[i]= log(cosmology.bias*cosmology.rcorr*2.0*constants.pi_sqr*(f1 + f2)); 
+      //printf("calculating P_shear_position %d\n",i);
     }
     OMEGA_M =   cosmology.Omega_m ;
     OMEGA_V =   cosmology.Omega_v ;
@@ -2296,18 +2352,6 @@ double P_GI(double s)  //see Eq. 157 in Schneider 2006 WL
     SIGMA_8 =  cosmology.sigma_8;
     W0      = cosmology.w0;
     WA      = cosmology.wa;
-    NONLINEAR = cosmology.nonlinear;
-    
-    BETA_P  =   redshiftshear.beta_p;
-    ALPHA   = redshiftshear.alpha;
-    Z0      =   redshiftshear.z0;
-    Z_MAX   = redshiftshear.zdistrpar_zmax;
-    Z_MIN   = redshiftshear.zdistrpar_zmin;
-    BETA_P2  =   redshiftclustering.beta_p;
-    ALPHA2   = redshiftclustering.alpha;
-    Z02      =   redshiftclustering.z0;
-    Z_MAX2   = redshiftclustering.zdistrpar_zmax;
-    Z_MIN2   = redshiftclustering.zdistrpar_zmin;
     BIAS   = cosmology.bias;
     RCORR   = cosmology.rcorr;
     NUISANCE=nuisance.eta_ia;
@@ -2329,27 +2373,16 @@ double xi_GI(int pm, double theta)
   static double H0   = -42.;
   static double SIGMA_8 = -42.;
   
-  static double BETA_P  = -42.;
-  static double ALPHA  = -42.;
-  static double Z0      = -42.;
-  static double Z_MAX  = -42.;
-  static double Z_MIN   = -42.;
-  static double BETA_P2  = -42.;
-  static double ALPHA2 = -42.;
-  static double Z02      = -42.;
-  static double Z_MAX2 = -42.;
-  static double Z_MIN2   = -42.;
   static double BIAS   = -42.;
   static double RCORR   = -42.;
   static double NUISANCE =-42.;
   
-  static double NONLINEAR = -42;
   static double **table;
   static double dlogtheta, logthetamin, logthetamax;
   double res;
   
   
-  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 != cosmology.h0 || SIGMA_8 != cosmology.sigma_8 || BETA_P != redshiftshear.beta_p || ALPHA != redshiftshear.alpha || Z0 != redshiftshear.z0 ||Z_MAX !=redshiftshear.zdistrpar_zmax || Z_MIN !=redshiftshear.zdistrpar_zmin|| BETA_P2 != redshiftclustering.beta_p || ALPHA2 != redshiftclustering.alpha || Z02 != redshiftclustering.z0 ||Z_MAX2 !=redshiftclustering.zdistrpar_zmax || Z_MIN2 !=redshiftclustering.zdistrpar_zmin|| BIAS != cosmology.bias ||RCORR !=cosmology.rcorr|| NONLINEAR != cosmology.nonlinear || NUISANCE!=nuisance.eta_ia)
+  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 != cosmology.h0 || SIGMA_8 != cosmology.sigma_8 || BIAS != cosmology.bias ||RCORR !=cosmology.rcorr||  NUISANCE!=nuisance.eta_ia)
   {
     OMEGA_M =   cosmology.Omega_m ;
     OMEGA_V =   cosmology.Omega_v ;
@@ -2359,18 +2392,6 @@ double xi_GI(int pm, double theta)
     SIGMA_8 =  cosmology.sigma_8;
     W0      = cosmology.w0;
     WA      = cosmology.wa;
-    NONLINEAR = cosmology.nonlinear;
-    
-    BETA_P  =   redshiftshear.beta_p;
-    ALPHA   = redshiftshear.alpha;
-    Z0      =   redshiftshear.z0;
-    Z_MAX   = redshiftshear.zdistrpar_zmax;
-    Z_MIN   = redshiftshear.zdistrpar_zmin;
-    BETA_P2  =   redshiftclustering.beta_p;
-    ALPHA2   = redshiftclustering.alpha;
-    Z02      =   redshiftclustering.z0;
-    Z_MAX2   = redshiftclustering.zdistrpar_zmax;
-    Z_MIN2   = redshiftclustering.zdistrpar_zmin;
     BIAS   = cosmology.bias;
     RCORR   = cosmology.rcorr;
     NUISANCE=nuisance.eta_ia;
@@ -2415,7 +2436,7 @@ void xi_via_hankel_GI(double **xi, double *logthetamin, double *logthetamax)
     l     = exp(lnrc+(i-nc)*dlnl);
     lP[i] = l*P_GI(l);
   }
-
+  
   /* go to log-Fourier-space */
   fftw_execute(plan);
   arg[0] = 0;   /* bias */
@@ -2482,13 +2503,6 @@ double P_II(double s)
   static double OMB   = -42.;
   static double H0   = -42.;
   static double SIGMA_8 = -42.;
-  static double NONLINEAR = -42;
-  
-  static double BETA_P2  = -42.;
-  static double ALPHA2 = -42.;
-  static double Z02      = -42.;
-  static double Z_MAX2 = -42.;
-  static double Z_MIN2   = -42.;
   static double BIAS   = -42.;
   static double RCORR   = -42.;
   static double NUISANCE=-42.;
@@ -2498,7 +2512,7 @@ double P_II(double s)
   double f1,slog,f2,fK,a, hoverh0,k;
   int i;
   
-  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 != cosmology.h0 || SIGMA_8 != cosmology.sigma_8 ||  BETA_P2 != redshiftclustering.beta_p || ALPHA2 != redshiftclustering.alpha || Z02 != redshiftclustering.z0 ||Z_MAX2 !=redshiftclustering.zdistrpar_zmax || Z_MIN2 !=redshiftclustering.zdistrpar_zmin|| BIAS != cosmology.bias ||RCORR !=cosmology.rcorr|| NONLINEAR != cosmology.nonlinear || NUISANCE != nuisance.eta_ia)
+  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 != cosmology.h0 || SIGMA_8 != cosmology.sigma_8 || BIAS != cosmology.bias ||RCORR !=cosmology.rcorr||  NUISANCE != nuisance.eta_ia)
   {
     logsmin = log(limits.P_2_s_min);
     logsmax = log(limits.P_2_s_max);
@@ -2508,10 +2522,10 @@ double P_II(double s)
     table   = sm2_vector(0, table_N_s-1);
     for (i=0; i<table_N_s; i++, slog+=ds) {
       global.sglob = exp(slog);
-      /*case of single source redshift at redshiftclustering.z0, p(w) = delta(w-w0) */
-      if ((redshiftclustering.beta_p == 0.0) && (redshiftclustering.histogram_zbins == 0)) {
+      /*case of single source redshift at redshift.clustering_z0, p(w) = delta(w-w0) */
+      if ((redshift.clustering_beta_p == 0.0) && (redshift.clustering_histogram_zbins == 0)) {
 	
-	a = 1./(1.+redshiftclustering.z0);
+	a = 1./(1.+redshift.clustering_z0);
 	fK     =f_K(chi(a));
 	k      = global.sglob/fK;
 	hoverh0 = sqrt(cosmology.Omega_m /(a*a*a) + (1.-cosmology.Omega_m -cosmology.Omega_v )/(a*a) + omv_vareos(a) );
@@ -2534,13 +2548,6 @@ double P_II(double s)
     SIGMA_8 =  cosmology.sigma_8;
     W0      = cosmology.w0;
     WA      = cosmology.wa;
-    NONLINEAR = cosmology.nonlinear;
-    
-    BETA_P2  =   redshiftclustering.beta_p;
-    ALPHA2   = redshiftclustering.alpha;
-    Z02      =   redshiftclustering.z0;
-    Z_MAX2   = redshiftclustering.zdistrpar_zmax;
-    Z_MIN2   = redshiftclustering.zdistrpar_zmin;
     BIAS   = cosmology.bias;
     RCORR   = cosmology.rcorr;
     NUISANCE   = nuisance.eta_ia;
@@ -2563,21 +2570,14 @@ double xi_II(int pm, double theta)
   static double H0   = -42.;
   static double SIGMA_8 = -42.;
   
-  
-  static double BETA_P2  = -42.;
-  static double ALPHA2 = -42.;
-  static double Z02      = -42.;
-  static double Z_MAX2 = -42.;
-  static double Z_MIN2   = -42.;
   static double BIAS   = -42.;
   static double RCORR   = -42.;
   static double NUISANCE   = -42.;
   
-  static double NONLINEAR = -42;
   static double **table;
   static double dlogtheta, logthetamin, logthetamax;
   double res;
-  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 != cosmology.h0 || SIGMA_8 != cosmology.sigma_8 ||  BETA_P2 != redshiftclustering.beta_p || ALPHA2 != redshiftclustering.alpha || Z02 != redshiftclustering.z0 ||Z_MAX2 !=redshiftclustering.zdistrpar_zmax || Z_MIN2 !=redshiftclustering.zdistrpar_zmin|| BIAS != cosmology.bias ||RCORR !=cosmology.rcorr|| NONLINEAR != cosmology.nonlinear|| NUISANCE != nuisance.eta_ia)
+  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 != cosmology.h0 || SIGMA_8 != cosmology.sigma_8 || BIAS != cosmology.bias ||RCORR !=cosmology.rcorr|| NUISANCE != nuisance.eta_ia)
   {
     OMEGA_M =   cosmology.Omega_m ;
     OMEGA_V =   cosmology.Omega_v ;
@@ -2587,12 +2587,6 @@ double xi_II(int pm, double theta)
     SIGMA_8 =  cosmology.sigma_8;
     W0      = cosmology.w0;
     WA      = cosmology.wa;
-    NONLINEAR = cosmology.nonlinear;
-    BETA_P2  =   redshiftclustering.beta_p;
-    ALPHA2   = redshiftclustering.alpha;
-    Z02      =   redshiftclustering.z0;
-    Z_MAX2   = redshiftclustering.zdistrpar_zmax;
-    Z_MIN2   = redshiftclustering.zdistrpar_zmin;
     BIAS   = cosmology.bias;
     RCORR   = cosmology.rcorr;
     NUISANCE   = nuisance.eta_ia;

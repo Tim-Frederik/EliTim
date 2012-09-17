@@ -26,36 +26,36 @@ typedef struct {
 }nuisancepara;
 
 typedef struct {
-  int Nbin;
-  int Npowerspectra;
-  double zmax[10];
-  double zmin[10];
-}sheartomopara;
+  int shear_Nbin; // number of tomography bins
+  int shear_Npowerspectra;// number of tomography power spectra=1+2+3+...+Nbin
+  double shear_zmax[10]; 
+  double shear_zmin[10];
+  int clustering_Nbin; // number of tomography bins
+  int clustering_Npowerspectra;// number of tomography power spectra=1+2+3+...+Nbin
+  double clustering_zmax[10]; 
+  double clustering_zmin[10];
+}tomopara;
 
 typedef struct {
-     double z0;		/* redshift distribution scale                    */
-     double beta_p;		/* redshift distribution power index. If beta_b = 0, a distribution with a single source redshift at z0 is assumed */
-     double alpha;  /* redshift distribution power index.*/
-     double zdistrpar_zmin;     /*cut-offs in the redshift distribution*/
-     double zdistrpar_zmax;
-     char REDSHIFT_FILE[200];
-     int histogram_zbins;
-     double zdistrpar_zmin2;     /*cut-offs in the redshift distribution*/
-     double zdistrpar_zmax2;
-  
-}redshiftshearpara;
-
-typedef struct {
-     double z0;		/* redshift distribution scale                    */
-     double beta_p;		/* redshift distribution power index. If beta_b = 0, a distribution with a single source redshift at z0 is assumed */
-     double alpha;  /* redshift distribution power index.*/
-     double zdistrpar_zmin;     /*cut-offs in the redshift distribution*/
-     double zdistrpar_zmax;
-     char REDSHIFT_FILE[200];
-     int histogram_zbins;
-      double zdistrpar_zmin2;     /*cut-offs in the redshift distribution*/
-     double zdistrpar_zmax2;
-}redshiftclusteringpara;
+  int shear_photoz;
+  double shear_zdistrpar_zmin;
+  double shear_zdistrpar_zmax;
+  int shear_histogram_zbins;
+  char shear_REDSHIFT_FILE[200];
+  double shear_z0;		/* redshift distribution scale */
+  double shear_alpha;  /* redshift distribution power index.*/
+  double shear_beta_p;		/* redshift distribution power index. If beta_b = 0, a distribution with a single source redshift at z0 is assumed */
+   
+  int clustering_photoz;
+  double clustering_zdistrpar_zmin;
+  double clustering_zdistrpar_zmax;
+  int clustering_histogram_zbins;
+  char clustering_REDSHIFT_FILE[200];
+  double clustering_z0;		
+  double clustering_alpha;  /* redshift distribution power index.*/
+  double clustering_beta_p;		/* redshift distribution power index. If beta_b = 0, a distribution with a single source redshift at z0 is assumed */
+   
+}redshiftpara;
 
 typedef struct {
      double Omega_m;		/* matter density parameter                       */

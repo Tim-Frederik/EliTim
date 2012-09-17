@@ -22,10 +22,9 @@ extern pre precision;
 extern lim limits;
 extern cosmopara cosmology;
 extern configpara configuration;
-extern redshiftshearpara redshiftshear;
-extern redshiftclusteringpara redshiftclustering;
+extern redshiftpara redshift;
 extern globalpara global;
-extern sheartomopara sheartomo;
+extern tomopara tomo;
 
 
 
@@ -41,11 +40,11 @@ double indexcalc(int a,int b)
   static double **table;
   
   if (NEW!=0){
-    if (table!=0) sm2_free_matrix(table, 0, sheartomo.Nbin-1, 0, sheartomo.Nbin-1);
-    table = sm2_matrix(0, sheartomo.Nbin-1, 0,sheartomo.Nbin-1);
+    if (table!=0) sm2_free_matrix(table, 0, tomo.shear_Nbin-1, 0, tomo.shear_Nbin-1);
+    table = sm2_matrix(0, tomo.shear_Nbin-1, 0,tomo.shear_Nbin-1);
     k=0;
-    for (i=0; i<sheartomo.Nbin;i++){
-     for (j=i; j<sheartomo.Nbin;j++,k++){
+    for (i=0; i<tomo.shear_Nbin;i++){
+     for (j=i; j<tomo.shear_Nbin;j++,k++){
       table[i][j]=k;
       table[j][i]=k;       
       }
@@ -59,14 +58,14 @@ double zdistr_tomo(double z, int i)
 {
     double static norm;
     int static normi=-42;
-  //printf("%le %le\n",sheartomo.zmax[i],sheartomo.zmin[i]);
+  //printf("%le %le\n",tomo.shear_zmax[i],tomo.shear_zmin[i]);
   //First, compute the normalization
   if(normi !=i){  
-  norm = sm2_qromb(int_for_zdistr_mock,sheartomo.zmin[i],sheartomo.zmax[i]);
+  norm = sm2_qromb(int_for_zdistr_mock,tomo.shear_zmin[i],tomo.shear_zmax[i]);
    // printf("norm=%le\n",norm);
   normi=i;
   }
-    if(z>sheartomo.zmax[i] || z<sheartomo.zmin[i]) return 0.0;
+    if(z>tomo.shear_zmax[i] || z<tomo.shear_zmin[i]) return 0.0;
     //printf("zdistr_tomo %le %le %le %le\n",z,int_for_zdistr_mock(z),norm,int_for_zdistr_mock(z)/norm);
     return int_for_zdistr_mock(z)/norm;
 }
@@ -75,14 +74,14 @@ double zdistr_tomo2(double z, int i)
 {
     double static norm;
     int static normi=-42;
-  //printf("%le %le\n",sheartomo.zmax[i],sheartomo.zmin[i]);
+  //printf("%le %le\n",tomo.shear_zmax[i],tomo.shear_zmin[i]);
   //First, compute the normalization
   if(normi !=i){  
-  norm = sm2_qromb(int_for_zdistr_mock,sheartomo.zmin[i],sheartomo.zmax[i]);
+  norm = sm2_qromb(int_for_zdistr_mock,tomo.shear_zmin[i],tomo.shear_zmax[i]);
     //printf("norm=%le\n",norm);
   normi=i;
   }
-    if(z>sheartomo.zmax[i] || z<sheartomo.zmin[i]) return 0.0;
+    if(z>tomo.shear_zmax[i] || z<tomo.shear_zmin[i]) return 0.0;
     //printf("zdistr_tomo2 %le %le %le %le\n",z,int_for_zdistr_mock(z),norm,int_for_zdistr_mock(z)/norm);
     return int_for_zdistr_mock(z)/norm;
 }
@@ -97,7 +96,7 @@ double int_for_g_tomo(double aprime,void *params)
   double chi_glob, chi_prime,val;
   double *ar = (double *) params;
   int zbin= (int) ar[0];
-  //if (global.aglob < 1./(sheartomo.zmax[zbin]+1.) ) return 0.0;
+  //if (global.aglob < 1./(tomo.shear_zmax[zbin]+1.) ) return 0.0;
       
   chi_glob = chi(global.aglob);
   chi_prime = chi(aprime);
@@ -120,27 +119,27 @@ double g_source_tomo(double a, int zbin)
   double aa;
   int i,j;
   double array[1];
- /*case of single source redshift at redshiftshear.z0, p(w) = delta(w-w0) */
+ /*case of single source redshift at redshift.shear_z0, p(w) = delta(w-w0) */
   
   if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W_0 != cosmology.w0   || W_A!= cosmology.wa) 
   {
-    if (table!=0) sm2_free_matrix(table, 0, sheartomo.Nbin-1, 0, table_N_a-1);
-    table   = sm2_matrix(0, sheartomo.Nbin-1, 0, table_N_a-1);
-    da = (0.999999-1./(redshiftshear.zdistrpar_zmax+1.))/(table_N_a-1);
+    if (table!=0) sm2_free_matrix(table, 0, tomo.shear_Nbin-1, 0, table_N_a-1);
+    table   = sm2_matrix(0, tomo.shear_Nbin-1, 0, table_N_a-1);
+    da = (0.999999-1./(redshift.shear_zdistrpar_zmax+1.))/(table_N_a-1);
     
-    for (j=0;j<sheartomo.Nbin;j++) {
+    for (j=0;j<tomo.shear_Nbin;j++) {
       array[0]=(double) j;
-      aa = 1./(redshiftshear.zdistrpar_zmax+1.);
+      aa = 1./(redshift.shear_zdistrpar_zmax+1.);
     /*case of redshift distribution */
     for (i=0;i<table_N_a;i++,aa+=da) {
       global.aglob = aa;
-      table[j][i] = int_GSL_integrate_qag2(int_for_g_tomo,(void*)array,1./(redshiftshear.zdistrpar_zmax+1.),aa,NULL,4000);
+      table[j][i] = int_GSL_integrate_qag2(int_for_g_tomo,(void*)array,1./(redshift.shear_zdistrpar_zmax+1.),aa,NULL,4000);
       //printf(" tomo  %le %le %le\n",aa,1./aa-1,table[j][i]);
      }
 //     if (j==4){
 // 	FILE *F;
 // 	F=fopen("../../../data/baryons/g_source_tomo","w");
-// 	aa = 1./(redshiftshear.zdistrpar_zmax+1.);
+// 	aa = 1./(redshift.shear_zdistrpar_zmax+1.);
 // 	for (i=0;i<table_N_a;i++,aa+=da) {
 // 	fprintf(F,"%le %le %le %le %le %le\n",1./aa-1,table[0][i],table[1][i],table[2][i],table[3][i],table[4][i]);
 //       }
@@ -154,8 +153,8 @@ double g_source_tomo(double a, int zbin)
     W_0 = cosmology.w0 ;
     W_A = cosmology.wa ;
   }
-  if (a<1./(redshiftshear.zdistrpar_zmax+1.)) return 0.0;
-  return sm2_interpol(table[zbin], table_N_a, 1./(redshiftshear.zdistrpar_zmax+1.), 0.999999, da, a, 1.0, 1.0);
+  if (a<1./(redshift.shear_zdistrpar_zmax+1.)) return 0.0;
+  return sm2_interpol(table[zbin], table_N_a, 1./(redshift.shear_zdistrpar_zmax+1.), 0.999999, da, a, 1.0, 1.0);
 }
 
 
@@ -204,18 +203,18 @@ double P_shear_shear_tomo(double s, int Npowerspec)
     logsmax = log(limits.P_2_s_max);
     ds = (logsmax - logsmin)/(table_N_s - 1.);
    
-    if (table!=0) sm2_free_matrix(table, 0, sheartomo.Npowerspectra-1, 0, table_N_s-1);
-    table   = sm2_matrix(0, sheartomo.Npowerspectra-1, 0, table_N_s-1);
+    if (table!=0) sm2_free_matrix(table, 0, tomo.shear_Npowerspectra-1, 0, table_N_s-1);
+    table   = sm2_matrix(0, tomo.shear_Npowerspectra-1, 0, table_N_s-1);
    
     l=0;
-    for (k=0; k<sheartomo.Nbin; k++) {
+    for (k=0; k<tomo.shear_Nbin; k++) {
       array[0]=(double) k;
-      for (j=k; j<sheartomo.Nbin; j++,l++) {
+      for (j=k; j<tomo.shear_Nbin; j++,l++) {
 	array[1]=(double) j;
 	 slog = logsmin;
 	 for (i=0; i<table_N_s; i++, slog+=ds) {
 	  global.sglob = exp(slog);
-	  res =int_GSL_integrate_crude(int_for_p_shear_shear_tomo,(void*)array,1./(redshiftshear.zdistrpar_zmax+1.),0.999999,NULL,1000);
+	  res =int_GSL_integrate_crude(int_for_p_shear_shear_tomo,(void*)array,1./(redshift.shear_zdistrpar_zmax+1.),0.999999,NULL,1000);
 	  table[l][i]= log(9./4.*DSQR(cosmology.Omega_m )*2.0*constants.pi_sqr*(res)); 
 	  //printf("%d %d %d %le %le\n",k,j,l,exp(slog),table[l][i]);
 	}
@@ -261,7 +260,7 @@ double xi_shear_shear_plus_tomo(int pm, double theta,int Npowerspec)
   static double dlogtheta, logthetamin, logthetamax;
   double res;
   
-  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || SIGMA_8 != cosmology.sigma_8 || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 !=cosmology.h0 || BETA_P != redshiftshear.beta_p || ALPHA != redshiftshear.alpha || Z0 != redshiftshear.z0 || NONLINEAR != cosmology.nonlinear) 
+  if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W0 != cosmology.w0   || WA!= cosmology.wa  || SIGMA_8 != cosmology.sigma_8 || N_SPEC != cosmology.n_spec || OMB !=cosmology.omb || H0 !=cosmology.h0 || BETA_P != redshift.shear_beta_p || ALPHA != redshift.shear_alpha || Z0 != redshift.shear_z0 || NONLINEAR != cosmology.nonlinear) 
   {
     OMEGA_M = cosmology.Omega_m ;
     OMEGA_V = cosmology.Omega_v ;
@@ -274,9 +273,9 @@ double xi_shear_shear_plus_tomo(int pm, double theta,int Npowerspec)
     WA      = cosmology.wa;
     NONLINEAR = cosmology.nonlinear;
     
-    BETA_P  =   redshiftshear.beta_p;
-    ALPHA   = redshiftshear.alpha;
-    Z0      =  redshiftshear.z0;
+    BETA_P  =   redshift.shear_beta_p;
+    ALPHA   = redshift.shear_alpha;
+    Z0      =  redshift.shear_z0;
     
     if (table!=0) sm2_free_matrix(table, 0, 1, 0, table_N_thetaH-1);
     table   = sm2_matrix(0, 1, 0, table_N_thetaH-1);
@@ -513,13 +512,13 @@ double P_shear_position_tomo(double s, int Npowerspec)  //see Eq. 157 in Schneid
     logsmax = log(limits.P_2_s_max);
     ds = (logsmax - logsmin)/(table_N_s - 1.);
     slog = logsmin;
-    if (table!=0) sm2_free_matrix(table, 0, sheartomo.Npowerspectra-1, 0, table_N_s-1);
-    table   = sm2_matrix(0, sheartomo.Npowerspectra-1, 0, table_N_s-1);
+    if (table!=0) sm2_free_matrix(table, 0, tomo.shear_Npowerspectra-1, 0, table_N_s-1);
+    table   = sm2_matrix(0, tomo.shear_Npowerspectra-1, 0, table_N_s-1);
   
     l=0;
-    for (k=0; k<sheartomo.Nbin; k++) {
+    for (k=0; k<tomo.shear_Nbin; k++) {
       array[0]=(double) k;
-      for (j=k; j<sheartomo.Nbin; j++,l++) {
+      for (j=k; j<tomo.shear_Nbin; j++,l++) {
 	array[1]=(double) j;
 	 slog = logsmin;
 	 for (i=0; i<table_N_s; i++, slog+=ds) {
@@ -821,13 +820,13 @@ double P_position_position_tomo(double s, int Npowerspec)  //see Eq. 157 in Schn
     logsmax = log(limits.P_2_s_max);
     ds = (logsmax - logsmin)/(table_N_s - 1.);
     
-    if (table!=0) sm2_free_matrix(table, 0, sheartomo.Npowerspectra-1, 0, table_N_s-1); 
-    table   = sm2_matrix(0, sheartomo.Npowerspectra-1, 0, table_N_s-1);
+    if (table!=0) sm2_free_matrix(table, 0, tomo.shear_Npowerspectra-1, 0, table_N_s-1); 
+    table   = sm2_matrix(0, tomo.shear_Npowerspectra-1, 0, table_N_s-1);
     
     l=0;
-    for (k=0; k<sheartomo.Nbin; k++) {
+    for (k=0; k<tomo.shear_Nbin; k++) {
       array[0]=(double) k;
-      for (j=k; j<sheartomo.Nbin; j++,l++) {
+      for (j=k; j<tomo.shear_Nbin; j++,l++) {
 	array[1]=(double) j;
 	 slog = logsmin;
 	 for (i=0; i<table_N_s; i++, slog+=ds) {
