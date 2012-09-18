@@ -1,0 +1,1 @@
+gcc gi.c ../theory/survey.c ../theory/theory_all.c ../theory/tomo.c ../theory/cosmology.c ../theory/maths.c ../theory/halo.c ../emu_11/emu.c ../emu_11/hubble.c -lfftw3 -lgsl -lgslcblas -lm -o gi.x

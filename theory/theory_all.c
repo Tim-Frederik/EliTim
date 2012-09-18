@@ -1,6 +1,5 @@
 #include <math.h>
 #include <stdlib.h>
-#include <malloc.h>
 #include <stdio.h>
 #include <assert.h>
 
@@ -1053,47 +1052,55 @@ double f_K(double chi)
 double p_zphot(double zp, double zs){
   static double init = -42.;
   static double **table_z = 0;
-  static double zmin = 0.04, zmax = 1.96, dz = 0.08;
+  static double zmin = 0.01, zmax = 1.99, dz = 0.02;
+	double res;
   if (init != 1.0){
     if (!table_z) {table_z = sm2_matrix(0, table_N_zp-1, 0, table_N_zs-1);}
     FILE *ein;
     int i,j;
     double a2,a3,a4,z,z1;
-    ein = fopen("./distr_zphot_zspec","r");
+    ein = fopen("../theory/distr_zphot_zspec_100","r");
     for (i = 0; i< table_N_zs; i++){
       for (j = 0; j< table_N_zp; j++){
 	fscanf(ein,"%le %le %le %le %le",&z1,&a2,&a3,&a4,&z);
 	table_z[j][i] = a3;
       }
     }
+	fclose(ein);
     init = 1.0;
   }
-  if (zs < zmin || zp < zmin || zs> zmax ||zp> zmax){return 0;}
-  else{	return sm2_interpol2d(table_z,table_N_zp, zmin, zmax,dz,zp,table_N_zs, zmin, zmax,dz,zs,1.0,1.0)/dz;}	
+	
+  if (zs < zmin || zp < zmin || zs> zmax ||zp> zmax){return 0.;}
+	res = sm2_interpol2d(table_z,table_N_zp, zmin, zmax,dz,zp,table_N_zs, zmin, zmax,dz,zs,1.0,1.0)/dz;
+  return res;	
 }
 
 double p_zspec(double zs, double zp){
   static double init = -42.;
   static double **table_z = 0;
   static double zmin = 0.01, zmax = 1.99, dz = 0.02;
+  double res;
   if (init != 1.0){
     if (!table_z) {table_z = sm2_matrix(0, table_N_zs-1, 0, table_N_zp-1);}
     FILE *ein;
     int i,j;
     double a2,a3,a4,z,z1;
-    ein = fopen("./distr_zphot_zspec_100","r");
+    ein = fopen("../theory/distr_zphot_zspec_100","r");
     for (i = 0; i< table_N_zs; i++){
       for (j = 0; j< table_N_zp; j++){
 	fscanf(ein,"%le %le %le %le %le",&z1,&a2,&a3,&a4,&z);
 	table_z[i][j] = a4;
       }
+
     }
+	fclose(ein);
     init = 1.0;
   }
   if (zs < zmin && zp >zmin && zp < zmax){return sm2_interpol2d(table_z,table_N_zs, zmin, zmax,dz,zmin,table_N_zp, zmin, zmax,dz,zp,1.0,1.0)/dz;}
   if (zp < zmin && zs >zmin && zs < zmax){return sm2_interpol2d(table_z,table_N_zs, zmin, zmax,dz,zs,table_N_zp, zmin, zmax,dz,zmin,1.0,1.0)/dz;}
-  else if (zs> zmax ||zp> zmax){return 0;}
-  else{ return sm2_interpol2d(table_z,table_N_zs, zmin, zmax,dz,zs,table_N_zp, zmin, zmax,dz,zp,1.0,1.0)/dz;}
+  if (zs> zmax ||zp> zmax){return 0.;}
+	res = sm2_interpol2d(table_z,table_N_zs, zmin, zmax,dz,zs,table_N_zp, zmin, zmax,dz,zp,1.0,1.0)/dz;
+	return res;
 }
 
 
@@ -1111,15 +1118,9 @@ double int_for_zdistr_photoz(double ztrue, void *params)
   array[2] = ztrue;
   gsl_integration_workspace *w;
   gsl_function H;
-  
-  
   w = gsl_integration_workspace_alloc (1000);
-  
-  
   H.function = &int_for_zdistr_photoz_inner;
   H.params = (void*)array;
-  
-  
   gsl_integration_qag (&H,array[0],array[1], 0, 1.e-3, 1000, GSL_INTEG_GAUSS41, w, &result, &error); 
   gsl_integration_workspace_free(w);
   return result;
@@ -1144,24 +1145,16 @@ double int_for_zdistr_mock_photoz_inner(double z, void *params)
     sprintf(filename,"%s",redshift.shear_REDSHIFT_FILE);	 
     printf("%s\n",filename);
     ein=fopen(filename,"r");
-    
-    
     for (i=0;i<redshift.shear_histogram_zbins;i++){
       fscanf(ein,"%le %le %le %le\n",&space1,&z_vector[i],&space2,&Nz_vector[i]);
-      //	printf("%le %le\n",z_vector[i],Nz_vector[i]);
     }
     fclose(ein);
     table=1;
     gsl_spline_init (redshift_distrib_spline, z_vector,Nz_vector,redshift.shear_histogram_zbins);    
     zhisto_max=z_vector[redshift.shear_histogram_zbins-1];
     zhisto_min=z_vector[0];
-    
-    
     sm2_free_vector(z_vector,0,redshift.shear_histogram_zbins-1);    
     sm2_free_vector(Nz_vector,0,redshift.shear_histogram_zbins-1);
-    
-    
-    //printf("USING 4 column z-distrib\n");
   }
   if((z<zhisto_min) && (z>=redshift.shear_zdistrpar_zmin)) return gsl_spline_eval(redshift_distrib_spline,zhisto_min,zaccel5)*p_zspec(ztrue,zhisto_min);
   if((z>zhisto_max) && (z<=redshift.shear_zdistrpar_zmax)) return gsl_spline_eval(redshift_distrib_spline,zhisto_max,zaccel5)*p_zspec(ztrue,zhisto_max);
@@ -1183,20 +1176,6 @@ double int_for_zdistr_mock_photoz(double ztrue, void *params)
   for (z = array[0] + 0.5*dz;z < array[1]; z += dz){
     result += int_for_zdistr_mock_photoz_inner(z,(void*)array)*dz;
   }
-  /*    gsl_integration_workspace *w;
-   * gsl_function H;
-   * 
-   * 
-   * w = gsl_integration_workspace_alloc (1000);
-   * 
-   * 
-   * H.function = &int_for_zdistr_mock_photoz_inner;
-   * H.params = (void*)array;
-   * 
-   * 
-   * gsl_integration_qag (&H,array[0],array[1], 0, 1.e-3, 1000, GSL_INTEG_GAUSS41,
-   * w, &result, &error); 
-   * gsl_integration_workspace_free(w);*/
   return result;
 }
 
@@ -1204,21 +1183,12 @@ double int_for_zdistr_mock_photoz(double ztrue, void *params)
 
 double zdistr_photoz(double z,int i) //returns p(ztrue | i), works with binned or analytic distributions; i =-1 -> no tomography; i>= 0 -> tomography bin i
 {
-  static double norm[6] = {-42.0,-42.0,-42.0,-42.0,-42.0,-42.0};
+  static double norm[10] = {-42.0,-42.0,-42.0,-42.0,-42.0,-42.0,-42.0,-42.0,-42.0,-42.0};
   double array[3];
   if (i < 0){array[0] = redshift.shear_zdistrpar_zmin; array[1] = redshift.shear_zdistrpar_zmax;}
   if (i>= 0 && i < tomo.shear_Nbin){array[0] =tomo.shear_zmin[i];array[1] = tomo.shear_zmax[i];}
-  //First, compute the normalization
   if (norm[i+1]< 0)
   {
-    /*	gsl_integration_workspace *w;
-     * gsl_function H;
-     * 
-     * 
-     * w = gsl_integration_workspace_alloc (1000);
-     * 
-     * 
-     * H.params = (void*)array;*/
     double zi,dz;
     dz = (redshift.shear_zdistrpar_zmax-redshift.shear_zdistrpar_zmin)/200.0;
     norm[i+1] = 0.0;
@@ -1229,21 +1199,15 @@ double zdistr_photoz(double z,int i) //returns p(ztrue | i), works with binned o
       for (zi = redshift.shear_zdistrpar_zmin + 0.5*dz;zi < redshift.shear_zdistrpar_zmax; zi += dz){
 	norm[i+1] += int_for_zdistr_mock_photoz(zi,(void*)array)*dz;
       }
-      //H.function = &int_for_zdistr_mock_photoz;
     }
     
     
     if((redshift.shear_beta_p>0.) && (redshift.shear_histogram_zbins == 0 ))
     {
       for (zi = redshift.shear_zdistrpar_zmin + 0.5*dz;zi < redshift.shear_zdistrpar_zmax; zi += dz){
-	norm[i+1] += int_for_zdistr_mock_photoz(zi,(void*)array)*dz;
+	norm[i+1] += int_for_zdistr_photoz(zi,(void*)array)*dz;
       }
-      
-      
-      //H.function = &int_for_zdistr_photoz;
     }
-    //gsl_integration_qag (&H,redshift.shear_zdistrpar_zmin,redshift.shear_zdistrpar_zmax, 0, 1.e-3, 1000, GSL_INTEG_GAUSS41,w, &norm, &error); 
-    //gsl_integration_workspace_free(w);
   }
    
   if(redshift.shear_histogram_zbins != 0)
@@ -1372,7 +1336,8 @@ double int_for_g(double aprime)
   double chi_glob, chi_prime,val;
   chi_glob = chi(global.aglob);
   chi_prime = chi(aprime);
-  val=zdistr(1./aprime-1.)*f_K(chi_prime-chi_glob)/f_K(chi_prime)/(aprime*aprime);
+	if(redshift.shear_photoz==0){ val=zdistr(1./aprime-1.)*f_K(chi_prime-chi_glob)/f_K(chi_prime)/(aprime*aprime);}
+	else {val=zdistr_photoz(1./aprime-1.,-1)*f_K(chi_prime-chi_glob)/f_K(chi_prime)/(aprime*aprime);}
   //if ((1./aprime-1.)>0.11 && (1./aprime-1.)<0.3325) printf("no tomo %le %le\n",1./aprime-1.,zdistr(1./aprime-1.));
   return val;
 }
@@ -1390,10 +1355,9 @@ double g_source(double a)
   static double da = 0.0;
   double aa,chi_delta;
   int i;
-  if(redshift.shear_photoz==1){
-    
-    return 0.0;
-  }
+//  if(redshift.shear_photoz==1){    
+//    modified int_for_g to include photoz correction
+//  }
   
   if ((redshift.shear_beta_p == 0.0) && (redshift.shear_histogram_zbins == 0)) {
     aa = 1./(1.+redshift.shear_z0);
@@ -1401,7 +1365,7 @@ double g_source(double a)
     chi_delta = chi(aa);
     return f_K(chi_delta-chi(a))/f_K(chi_delta);
   }
-  if(redshift.shear_photoz==0){
+//  if(redshift.shear_photoz==0){
   if (OMEGA_M != cosmology.Omega_m   || OMEGA_V != cosmology.Omega_v  || W_0 != cosmology.w0   || W_A!= cosmology.wa) 
   {
     if (table!=0) sm2_free_vector(table, 0, table_N_a-1);
@@ -1421,7 +1385,7 @@ double g_source(double a)
     W_0 = cosmology.w0 ;
     W_A = cosmology.wa ;
   }
-  }
+//  }
   return sm2_interpol(table, table_N_a, limits.a_min, 0.999999, da, a, 1.0, 1.0);
 }
 
@@ -1710,6 +1674,174 @@ void xi_via_hankel_shear_magnification(double **xi, double *logthetamin, double 
 //============================================================================
 //============================================================================
 
+double int_for_pf_photoz_inner(double z, void *params)
+{
+	double *array = (double*)params;
+	double zz=z/redshift.clustering_z0;
+	return pow(zz,redshift.clustering_alpha)*exp(-pow(zz,redshift.clustering_beta_p))*p_zspec(array[2],z);
+}
+
+double int_for_pf_photoz(double ztrue, void *params)
+{
+	double *array = (double*)params;
+	double result,error;
+	array[2] = ztrue;
+	gsl_integration_workspace *w;
+	gsl_function H;
+	w = gsl_integration_workspace_alloc (1000);
+	H.function = &int_for_pf_photoz_inner;
+	H.params = (void*)array;
+	gsl_integration_qag (&H,array[0],array[1], 0, 1.e-3, 1000, GSL_INTEG_GAUSS41, w, &result, &error); 
+	gsl_integration_workspace_free(w);
+	return result;
+}
+
+double int_for_pf_mock_photoz_inner(double z, void *params)
+{
+	int i; 
+	double val,*z_vector,*Nz_vector,space1,space2,ztrue;
+	double *array = (double*)params;
+	char filename[200];
+	FILE *ein;
+	int static table=0;
+	double static zhisto_max,zhisto_min;
+	ztrue = array[2];
+	if (table!=1){
+		z_vector=sm2_vector(0, redshift.clustering_histogram_zbins-1);
+		Nz_vector=sm2_vector(0, redshift.clustering_histogram_zbins-1);
+		const gsl_interp_type *redshift_t5 = gsl_interp_cspline;
+		zaccel5 = gsl_interp_accel_alloc();
+		redshift_distrib_spline = gsl_spline_alloc (redshift_t5,redshift.clustering_histogram_zbins);
+		sprintf(filename,"%s",redshift.clustering_REDSHIFT_FILE);	 
+		printf("%s\n",filename);
+		ein=fopen(filename,"r");
+		for (i=0;i<redshift.clustering_histogram_zbins;i++){
+			fscanf(ein,"%le %le %le %le\n",&space1,&z_vector[i],&space2,&Nz_vector[i]);
+		}
+		fclose(ein);
+		table=1;
+		gsl_spline_init (redshift_distrib_spline, z_vector,Nz_vector,redshift.clustering_histogram_zbins);    
+		zhisto_max=z_vector[redshift.clustering_histogram_zbins-1];
+		zhisto_min=z_vector[0];
+		sm2_free_vector(z_vector,0,redshift.clustering_histogram_zbins-1);    
+		sm2_free_vector(Nz_vector,0,redshift.clustering_histogram_zbins-1);
+	}
+	if((z<zhisto_min) && (z>=redshift.clustering_zdistrpar_zmin)) return gsl_spline_eval(redshift_distrib_spline,zhisto_min,zaccel5)*p_zspec(ztrue,zhisto_min);
+	if((z>zhisto_max) && (z<=redshift.clustering_zdistrpar_zmax)) return gsl_spline_eval(redshift_distrib_spline,zhisto_max,zaccel5)*p_zspec(ztrue,zhisto_max);
+	val= gsl_spline_eval(redshift_distrib_spline,z,zaccel5)*p_zspec(ztrue,z);
+	if (isnan(val))  printf("Redshift range exceeded: z=%le\n",z);
+	return val;
+}
+
+
+
+double int_for_pf_mock_photoz(double ztrue, void *params)
+{
+	double *array = (double*)params;
+	double result;
+	array[2] = ztrue;
+	double z,dz;
+	dz = (array[1]-array[0])/100.0;
+	result = 0.0;
+	for (z = array[0] + 0.5*dz;z < array[1]; z += dz){
+		result += int_for_pf_mock_photoz_inner(z,(void*)array)*dz;
+	}
+	return result;
+}
+
+
+
+double pf_photoz(double z,int i) //returns p(ztrue | i), works with binned or analytic distributions; i =-1 -> no tomography; i>= 0 -> tomography bin i
+{
+	static double norm[10] = {-42.0,-42.0,-42.0,-42.0,-42.0,-42.0,-42.0,-42.0,-42.0,-42.0};
+	double array[3];
+	if (i < 0){array[0] = redshift.clustering_zdistrpar_zmin; array[1] = redshift.clustering_zdistrpar_zmax;}
+	if (i>= 0 && i < tomo.clustering_Nbin){array[0] =tomo.clustering_zmin[i];array[1] = tomo.clustering_zmax[i];}
+	if (norm[i+1]< 0)
+	{
+		double zi,dz;
+		dz = (redshift.clustering_zdistrpar_zmax-redshift.clustering_zdistrpar_zmin)/200.0;
+		norm[i+1] = 0.0;
+		
+		
+		if(redshift.clustering_histogram_zbins != 0 )
+		{ 	
+			for (zi = redshift.clustering_zdistrpar_zmin + 0.5*dz;zi < redshift.clustering_zdistrpar_zmax; zi += dz){
+				norm[i+1] += int_for_pf_mock_photoz(zi,(void*)array)*dz;
+			}
+		}
+		
+		
+		if((redshift.clustering_beta_p>0.) && (redshift.clustering_histogram_zbins == 0 ))
+		{
+			for (zi = redshift.clustering_zdistrpar_zmin + 0.5*dz;zi < redshift.clustering_zdistrpar_zmax; zi += dz){
+				norm[i+1] += int_for_pf_photoz(zi,(void*)array)*dz;
+			}
+		}
+	}
+	
+	if(redshift.clustering_histogram_zbins != 0)
+	{
+		if((redshift.clustering_zdistrpar_zmin || redshift.clustering_zdistrpar_zmax) && (z>redshift.clustering_zdistrpar_zmax || z<redshift.clustering_zdistrpar_zmin)) return 0.0;
+		return int_for_pf_mock_photoz(z,(void*)array)/norm[i+1];
+	}
+	
+	if((redshift.clustering_zdistrpar_zmin || redshift.clustering_zdistrpar_zmax) && (z>redshift.clustering_zdistrpar_zmax || z<redshift.clustering_zdistrpar_zmin)) return 0.0;
+	return int_for_pf_photoz(z,(void*)array)/norm[i+1];
+}
+double int_for_pf(double z)
+{
+	double zz=z/redshift.clustering_z0;
+	return pow(zz,redshift.clustering_alpha)*exp(-pow(zz,redshift.clustering_beta_p));
+}
+
+
+
+double int_for_pf_mock(double z)
+{
+	int i; 
+	double val,*z_vector,*Nz_vector,space1,space2;
+	char filename[200];
+	FILE *ein;
+	int static table=0;
+	double static zhisto_max,zhisto_min;
+	
+	if (table!=1){
+		z_vector=sm2_vector(0, redshift.clustering_histogram_zbins-1);
+		Nz_vector=sm2_vector(0, redshift.clustering_histogram_zbins-1);
+		const gsl_interp_type *redshift_t5 = gsl_interp_cspline;
+		zaccel5 = gsl_interp_accel_alloc();
+		redshift_distrib_spline = gsl_spline_alloc (redshift_t5,redshift.clustering_histogram_zbins);
+		sprintf(filename,"%s",redshift.clustering_REDSHIFT_FILE);	 
+		printf("%s\n",filename);
+		ein=fopen(filename,"r");
+		
+		
+		for (i=0;i<redshift.clustering_histogram_zbins;i++){
+			fscanf(ein,"%le %le %le %le\n",&space1,&z_vector[i],&space2,&Nz_vector[i]);
+			//	printf("%le %le\n",z_vector[i],Nz_vector[i]);
+		}
+		fclose(ein);
+		table=1;
+		gsl_spline_init (redshift_distrib_spline, z_vector,Nz_vector,redshift.clustering_histogram_zbins);    
+		zhisto_max=z_vector[redshift.clustering_histogram_zbins-1];
+		zhisto_min=z_vector[0];
+		
+		
+		sm2_free_vector(z_vector,0,redshift.clustering_histogram_zbins-1);    
+		sm2_free_vector(Nz_vector,0,redshift.clustering_histogram_zbins-1);
+		
+		
+		//printf("USING 4 column z-distrib\n");
+	}
+	if((z<zhisto_min) && (z>=redshift.clustering_zdistrpar_zmin)) return gsl_spline_eval(redshift_distrib_spline,zhisto_min,zaccel5);
+	if((z>zhisto_max) && (z<=redshift.clustering_zdistrpar_zmax)) return gsl_spline_eval(redshift_distrib_spline,zhisto_max,zaccel5);
+	val= gsl_spline_eval(redshift_distrib_spline,z,zaccel5);
+	//printf("%le\n",val);
+	if (isnan(val))  printf("Redshift range exceeded:%le %le %le %le z=%le\n",zhisto_min,zhisto_max,redshift.clustering_zdistrpar_zmin,redshift.clustering_zdistrpar_zmax,z);
+	return val;
+}
+
 double pf(double z)
 {
   static double norm = 0.;
@@ -1718,12 +1850,12 @@ double pf(double z)
   
   if(redshift.clustering_photoz==1){
     
-    return 0.0;
+    return pf_photoz(z,-1);
   }
   
   if(redshift.clustering_histogram_zbins != 0 )
   {     
-  norm = sm2_qromb(int_for_zdistr_mock,redshift.clustering_zdistrpar_zmin,redshift.clustering_zdistrpar_zmax);
+  norm = sm2_qromb(int_for_pf_mock,redshift.clustering_zdistrpar_zmin,redshift.clustering_zdistrpar_zmax);
   //printf("norm=%le\n",norm);
   }
   
@@ -1731,7 +1863,7 @@ double pf(double z)
   {
     //                      if(redshift.clustering_zdistrpar_zmin || redshift.clustering_zdistrpar_zmax)
     {       //with cuts: use numeric normalization
-    norm = 1.0/(sm2_qromb(int_for_zdistr,redshift.clustering_zdistrpar_zmin,redshift.clustering_zdistrpar_zmax));
+    norm = 1.0/(sm2_qromb(int_for_pf,redshift.clustering_zdistrpar_zmin,redshift.clustering_zdistrpar_zmax));
     }
   }
   
@@ -1740,7 +1872,7 @@ double pf(double z)
   {
     if((redshift.clustering_zdistrpar_zmin || redshift.clustering_zdistrpar_zmax) && (z>redshift.clustering_zdistrpar_zmax || z<redshift.clustering_zdistrpar_zmin)) return 0.0;
     //printf("int_for_zdistr_mock %le %le %le %le\n",z,int_for_zdistr_mock(z),norm,int_for_zdistr_mock(z)/norm);
-    return int_for_zdistr_mock(z)/norm;
+    return int_for_pf_mock(z)/norm;
   }
   
   if((redshift.clustering_zdistrpar_zmin || redshift.clustering_zdistrpar_zmax) && (z>redshift.clustering_zdistrpar_zmax || z<redshift.clustering_zdistrpar_zmin)) return 0.0;
